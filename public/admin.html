@@ -561,6 +561,25 @@
       let votes = [];
       let pendingAction = null;
 
+      // Escape HTML to prevent XSS
+      function escapeHtml(str) {
+        if (!str) return "";
+        const div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      // Escape for use in HTML attributes
+      function escapeAttr(str) {
+        if (!str) return "";
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/'/g, "&#39;")
+          .replace(/"/g, "&quot;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
       // Initialize
       document.addEventListener("DOMContentLoaded", async () => {
         await checkAuth();
@@ -668,26 +687,36 @@
                       <div class="voter-avatar">
                         ${
                           vote.avatar
-                            ? `<img src="https://cdn.discordapp.com/avatars/${vote.userId}/${vote.avatar}.png?size=64" alt="${vote.username}">`
-                            : vote.username.charAt(0).toUpperCase()
+                            ? `<img src="https://cdn.discordapp.com/avatars/${escapeAttr(
+                                vote.userId
+                              )}/${escapeAttr(
+                                vote.avatar
+                              )}.png?size=64" alt="${escapeAttr(
+                                vote.username
+                              )}">`
+                            : escapeHtml(
+                                vote.username?.charAt(0)?.toUpperCase() || "?"
+                              )
                         }
                       </div>
                       <div>
-                        <div class="voter-name">${vote.username}</div>
-                        <div class="voter-id">${vote.userId}</div>
+                        <div class="voter-name">${escapeHtml(
+                          vote.username
+                        )}</div>
+                        <div class="voter-id">${escapeHtml(vote.userId)}</div>
                       </div>
                     </div>
                   </td>
-                  <td><span class="project-badge">${
+                  <td><span class="project-badge">${escapeHtml(
                     vote.projectName
-                  }</span></td>
-                  <td><span class="timestamp">${formatTimestamp(
-                    vote.timestamp
+                  )}</span></td>
+                  <td><span class="timestamp">${escapeHtml(
+                    formatTimestamp(vote.timestamp)
                   )}</span></td>
                   <td>
-                    <button class="btn btn-outline-danger btn-sm" onclick="confirmRemoveVote('${
+                    <button class="btn btn-outline-danger btn-sm" data-vote-id="${escapeAttr(
                       vote.id
-                    }', '${vote.username}')">
+                    )}" data-username="${escapeAttr(vote.username)}">
                       Remove
                     </button>
                   </td>
@@ -698,6 +727,13 @@
             </tbody>
           </table>
         `;
+
+        // Attach event listeners safely instead of inline onclick
+        content.querySelectorAll("[data-vote-id]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            confirmRemoveVote(btn.dataset.voteId, btn.dataset.username);
+          });
+        });
       }
 
       function formatTimestamp(timestamp) {
@@ -742,16 +778,18 @@
       async function executeConfirmedAction() {
         if (!pendingAction) return;
 
+        // Save action before closing modal (which clears pendingAction)
+        const action = pendingAction;
         closeConfirmModal();
 
         try {
           let response;
 
-          if (pendingAction.type === "remove") {
-            response = await fetch(`/api/admin/votes/${pendingAction.voteId}`, {
+          if (action.type === "remove") {
+            response = await fetch(`/api/admin/votes/${action.voteId}`, {
               method: "DELETE",
             });
-          } else if (pendingAction.type === "clearAll") {
+          } else if (action.type === "clearAll") {
             response = await fetch("/api/admin/votes", {
               method: "DELETE",
             });
@@ -771,8 +809,6 @@
           console.error("Action failed:", err);
           showToast("Action failed. Please try again.", "error");
         }
-
-        pendingAction = null;
       }
 
       function showToast(message, type = "success") {

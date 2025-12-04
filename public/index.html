@@ -1339,6 +1339,25 @@
           .toUpperCase();
       }
 
+      // Escape HTML to prevent XSS
+      function escapeHtml(str) {
+        if (!str) return "";
+        const div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      // Escape for use in HTML attributes
+      function escapeAttr(str) {
+        if (!str) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/'/g, "&#39;")
+          .replace(/"/g, "&quot;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
       function getDiscordAvatarUrl(odId, odAvatar) {
         if (odAvatar) {
           return `https://cdn.discordapp.com/avatars/${odId}/${odAvatar}.png?size=64`;
@@ -1357,17 +1376,19 @@
         displayVoters.forEach((voter) => {
           // Handle both old format (string) and new format (object)
           if (typeof voter === "string") {
-            html += `<div class="voter-avatar">${voter
-              .charAt(0)
-              .toUpperCase()}</div>`;
+            html += `<div class="voter-avatar">${escapeHtml(
+              voter.charAt(0).toUpperCase()
+            )}</div>`;
           } else {
             const avatarUrl = getDiscordAvatarUrl(voter.odId, voter.odAvatar);
             if (avatarUrl) {
-              html += `<div class="voter-avatar"><img src="${avatarUrl}" alt="${voter.username}"></div>`;
+              html += `<div class="voter-avatar"><img src="${escapeAttr(
+                avatarUrl
+              )}" alt="${escapeAttr(voter.username)}"></div>`;
             } else {
-              html += `<div class="voter-avatar">${voter.username
-                .charAt(0)
-                .toUpperCase()}</div>`;
+              html += `<div class="voter-avatar">${escapeHtml(
+                voter.username?.charAt(0)?.toUpperCase() || "?"
+              )}</div>`;
             }
           }
         });
@@ -1403,10 +1424,10 @@
               if (typeof voter === "string") {
                 return `
                 <div class="voter-item">
-                  <div class="voter-item-avatar">${voter
-                    .charAt(0)
-                    .toUpperCase()}</div>
-                  <div class="voter-item-name">${voter}</div>
+                  <div class="voter-item-avatar">${escapeHtml(
+                    voter.charAt(0).toUpperCase()
+                  )}</div>
+                  <div class="voter-item-name">${escapeHtml(voter)}</div>
                 </div>
               `;
               } else {
@@ -1419,11 +1440,17 @@
                   <div class="voter-item-avatar">
                     ${
                       avatarUrl
-                        ? `<img src="${avatarUrl}" alt="${voter.username}">`
-                        : voter.username.charAt(0).toUpperCase()
+                        ? `<img src="${escapeAttr(
+                            avatarUrl
+                          )}" alt="${escapeAttr(voter.username)}">`
+                        : escapeHtml(
+                            voter.username?.charAt(0)?.toUpperCase() || "?"
+                          )
                     }
                   </div>
-                  <div class="voter-item-name">${voter.username}</div>
+                  <div class="voter-item-name">${escapeHtml(
+                    voter.username
+                  )}</div>
                 </div>
               `;
               }
@@ -1505,9 +1532,9 @@
                   </button>`;
               } else {
                 voteSection = `
-                  <button class="btn btn-vote" onclick="vote('${
+                  <button class="btn btn-vote" data-vote-slug="${escapeAttr(
                     project.slug
-                  }', '${project.name.replace(/'/g, "\\'")}')">
+                  )}" data-vote-name="${escapeAttr(project.name)}">
                     <img src="./assets/favorite.svg" alt="" style="width:16px;height:16px;filter:brightness(0) invert(1);">
                     Vote for this
                   </button>`;
@@ -1515,24 +1542,30 @@
             }
 
             return `
-              <div class="project-card" id="project-${project.slug}">
+              <div class="project-card" id="project-${escapeAttr(
+                project.slug
+              )}">
                 <div class="project-header">
                   <div class="project-avatar">
                     ${
                       project.imageUrl
-                        ? `<img src="${project.imageUrl}" alt="${project.name}">`
-                        : getInitials(project.name)
+                        ? `<img src="${escapeAttr(
+                            project.imageUrl
+                          )}" alt="${escapeAttr(project.name)}">`
+                        : escapeHtml(getInitials(project.name))
                     }
                   </div>
                   <div class="project-info">
-                    <div class="project-name">${project.name}</div>
-                    <div class="project-slug">@${project.slug}</div>
+                    <div class="project-name">${escapeHtml(project.name)}</div>
+                    <div class="project-slug">@${escapeHtml(project.slug)}</div>
                   </div>
                 </div>
                 
                 ${
                   project.description
-                    ? `<div class="project-description">${project.description}</div>`
+                    ? `<div class="project-description">${escapeHtml(
+                        project.description
+                      )}</div>`
                     : ""
                 }
 
@@ -1542,7 +1575,9 @@
                   <div class="project-tags">
                     ${tags
                       .slice(0, 3)
-                      .map((tag) => `<span class="tag">${tag}</span>`)
+                      .map(
+                        (tag) => `<span class="tag">${escapeHtml(tag)}</span>`
+                      )
                       .join("")}
                   </div>
                 `
@@ -1571,16 +1606,18 @@
                 </div>
                 
                 <div class="project-footer">
-                  <a href="https://opencollective.com/${project.slug}" 
+                  <a href="https://opencollective.com/${encodeURIComponent(
+                    project.slug
+                  )}" 
                      target="_blank" 
                      rel="noopener noreferrer" 
                      class="project-link">
                     <img src="./assets/right-arrow.svg" alt="">
                     View on Open Collective
                   </a>
-                  <div class="vote-count voters-preview" onclick="event.stopPropagation(); showVoters('${
+                  <div class="vote-count voters-preview" data-show-voters="${escapeAttr(
                     project.slug
-                  }', '${project.name.replace(/'/g, "\\'")}')">
+                  )}" data-project-name="${escapeAttr(project.name)}">
                     ${renderVoterAvatars(
                       monthlyResults[project.slug]?.voters || []
                     )}
@@ -1602,6 +1639,21 @@
           .join("");
 
         contentDiv.innerHTML = `<div class="projects-grid">${projectsHTML}</div>`;
+
+        // Attach event listeners for vote buttons
+        contentDiv.querySelectorAll("[data-vote-slug]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            vote(btn.dataset.voteSlug, btn.dataset.voteName);
+          });
+        });
+
+        // Attach event listeners for show voters
+        contentDiv.querySelectorAll("[data-show-voters]").forEach((el) => {
+          el.addEventListener("click", (e) => {
+            e.stopPropagation();
+            showVoters(el.dataset.showVoters, el.dataset.projectName);
+          });
+        });
 
         // Re-render results with all projects
         renderResults();
@@ -1712,15 +1764,17 @@
             else rankClass = "rank-other";
 
             return `
-              <div class="result-item" onclick="scrollToProject('${
+              <div class="result-item" data-scroll-to="${escapeAttr(
                 result.slug
-              }')">
+              )}">
                 <div class="result-rank ${rankClass}">${index + 1}</div>
                 <div class="result-info">
-                  <div class="result-name">${result.projectName}</div>
-                  <div class="result-votes voters-preview" onclick="event.stopPropagation(); showVoters('${
+                  <div class="result-name">${escapeHtml(
+                    result.projectName
+                  )}</div>
+                  <div class="result-votes voters-preview" data-result-voters="${escapeAttr(
                     result.slug
-                  }', '${result.projectName.replace(/'/g, "\\'")}')">
+                  )}" data-result-name="${escapeAttr(result.projectName)}">
                     ${renderVoterAvatars(result.voters, 2)}
                     <span>${result.count} vote${
               result.count !== 1 ? "s" : ""
@@ -1734,6 +1788,23 @@
             `;
           })
           .join("");
+
+        // Attach event listeners for scroll to project
+        resultsList.querySelectorAll("[data-scroll-to]").forEach((el) => {
+          el.addEventListener("click", (e) => {
+            // Don't scroll if clicking on voters preview
+            if (e.target.closest("[data-result-voters]")) return;
+            scrollToProject(el.dataset.scrollTo);
+          });
+        });
+
+        // Attach event listeners for show voters in results
+        resultsList.querySelectorAll("[data-result-voters]").forEach((el) => {
+          el.addEventListener("click", (e) => {
+            e.stopPropagation();
+            showVoters(el.dataset.resultVoters, el.dataset.resultName);
+          });
+        });
       }
 
       function scrollToProject(slug) {

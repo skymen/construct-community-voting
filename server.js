@@ -15,7 +15,7 @@ const config = {
   botToken: process.env.DISCORD_BOT_TOKEN,
   guildId: process.env.DISCORD_GUILD_ID,
   requiredRoleId: process.env.DISCORD_REQUIRED_ROLE_ID,
-  adminRoleId: process.env.DISCORD_ADMIN_ROLE_ID || "157048794985267200",
+  adminRoleId: process.env.DISCORD_ADMIN_ROLE_ID,
   redirectUri:
     process.env.REDIRECT_URI ||
     `http://localhost:${PORT}/auth/discord/callback`,
