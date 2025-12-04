@@ -4,28 +4,35 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Construct Community Voting</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
-        --primary-orange: #ff6b35;
-        --primary-orange-dark: #e55a2b;
-        --primary-blue: #1e3a8a;
-        --discord-blurple: #5865F2;
+        --primary-coral: #ff6b6b;
+        --primary-coral-dark: #e85555;
+        --primary-blue: #4a90d9;
+        --discord-blurple: #5865f2;
         --discord-blurple-dark: #4752c4;
-        --bg-dark: #0f1419;
-        --bg-card: #1a1f2e;
-        --bg-card-hover: #232938;
-        --text-white: #ffffff;
-        --text-light: #e2e8f0;
-        --text-muted: #94a3b8;
-        --border-dark: #2d3748;
-        --success: #22c55e;
-        --warning: #f59e0b;
-        --error: #ef4444;
-        --gradient-warm: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-        --gradient-cool: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --bg-white: #ffffff;
+        --bg-light: #f8f9fa;
+        --bg-gradient-top: linear-gradient(
+          135deg,
+          #667eea 0%,
+          #764ba2 50%,
+          #ff6b6b 100%
+        );
+        --text-dark: #2b2b2b;
+        --text-gray: #666666;
+        --text-light: #999999;
+        --border-light: #e0e0e0;
+        --success: #4caf50;
+        --warning: #ff9800;
+        --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.08);
+        --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
       }
 
       * {
@@ -35,43 +42,46 @@
       }
 
       body {
-        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-        background: var(--bg-dark);
-        color: var(--text-light);
-        line-height: 1.6;
+        font-family: "Roboto", Arial, sans-serif;
+        background: var(--bg-light);
+        color: var(--text-dark);
+        line-height: 1.75;
+        font-weight: 300;
+        letter-spacing: 0.01em;
         min-height: 100vh;
       }
 
-      /* Animated background */
-      body::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: 
-          radial-gradient(ellipse at 20% 20%, rgba(255, 107, 53, 0.08) 0%, transparent 50%),
-          radial-gradient(ellipse at 80% 80%, rgba(88, 101, 242, 0.08) 0%, transparent 50%),
-          radial-gradient(ellipse at 50% 50%, rgba(118, 75, 162, 0.05) 0%, transparent 70%);
-        pointer-events: none;
-        z-index: 0;
+      /* Header section with gradient */
+      .hero-section {
+        background: linear-gradient(
+          135deg,
+          #667eea 0%,
+          #764ba2 50%,
+          #ff6b6b 100%
+        );
+        padding: 3rem 1.5rem 4rem;
+        position: relative;
+        overflow: hidden;
       }
 
-      .container {
+      .hero-section::after {
+        content: "";
+        position: absolute;
+        bottom: -50px;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background: var(--bg-light);
+        transform: skewY(-2deg);
+      }
+
+      .hero-content {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 2rem 1.5rem;
         position: relative;
         z-index: 1;
-      }
-
-      /* Header */
-      header {
         text-align: center;
-        margin-bottom: 3rem;
-        padding-bottom: 2rem;
-        border-bottom: 1px solid var(--border-dark);
+        color: white;
       }
 
       .logo-section {
@@ -79,33 +89,36 @@
         align-items: center;
         justify-content: center;
         gap: 1rem;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
       }
 
       .logo {
-        width: 56px;
-        height: 56px;
-        background: var(--gradient-warm);
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
         border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.75rem;
-        box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+      }
+
+      .logo img {
+        width: 40px;
+        height: 40px;
       }
 
       h1 {
         font-size: 2.75rem;
         font-weight: 700;
-        background: var(--gradient-warm);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
       }
 
       .subtitle {
-        font-size: 1.125rem;
-        color: var(--text-muted);
+        font-size: 1.25rem;
+        opacity: 0.9;
         font-weight: 300;
       }
 
@@ -115,7 +128,7 @@
         align-items: center;
         justify-content: center;
         gap: 1rem;
-        margin-top: 1.5rem;
+        margin-top: 2rem;
         flex-wrap: wrap;
       }
 
@@ -123,17 +136,18 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        background: var(--bg-card);
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
         padding: 0.5rem 1rem 0.5rem 0.5rem;
         border-radius: 50px;
-        border: 1px solid var(--border-dark);
+        border: 1px solid rgba(255, 255, 255, 0.3);
       }
 
       .user-avatar {
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        background: var(--gradient-cool);
+        background: rgba(255, 255, 255, 0.3);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -150,7 +164,7 @@
 
       .user-name {
         font-weight: 500;
-        color: var(--text-white);
+        color: white;
       }
 
       .btn {
@@ -165,51 +179,56 @@
         text-decoration: none;
         border: none;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
       }
 
       .btn-discord {
         background: var(--discord-blurple);
         color: white;
+        box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4);
       }
 
       .btn-discord:hover {
         background: var(--discord-blurple-dark);
         transform: translateY(-2px);
-        box-shadow: 0 4px 20px rgba(88, 101, 242, 0.4);
+        box-shadow: 0 6px 20px rgba(88, 101, 242, 0.5);
       }
 
       .btn-logout {
-        background: transparent;
-        color: var(--text-muted);
-        border: 1px solid var(--border-dark);
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
       }
 
       .btn-logout:hover {
-        background: var(--bg-card);
-        color: var(--text-white);
+        background: rgba(255, 255, 255, 0.3);
       }
 
       .btn-vote {
-        background: var(--gradient-warm);
+        background: var(--primary-coral);
         color: white;
-        padding: 0.5rem 1rem;
+        padding: 0.625rem 1.25rem;
         font-size: 0.875rem;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
       }
 
       .btn-vote:hover:not(:disabled) {
+        background: var(--primary-coral-dark);
         transform: translateY(-2px);
-        box-shadow: 0 4px 20px rgba(255, 107, 53, 0.4);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
       }
 
       .btn-vote:disabled {
-        opacity: 0.5;
+        opacity: 0.6;
         cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
       }
 
       .btn-voted {
         background: var(--success);
-        cursor: default;
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
       }
 
       /* Status badges */
@@ -221,24 +240,24 @@
         border-radius: 50px;
         font-size: 0.8125rem;
         font-weight: 500;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
       }
 
       .status-eligible {
-        background: rgba(34, 197, 94, 0.15);
-        color: var(--success);
-        border: 1px solid rgba(34, 197, 94, 0.3);
+        background: rgba(76, 175, 80, 0.2);
+        border-color: rgba(76, 175, 80, 0.4);
       }
 
       .status-ineligible {
-        background: rgba(239, 68, 68, 0.15);
-        color: var(--error);
-        border: 1px solid rgba(239, 68, 68, 0.3);
+        background: rgba(244, 67, 54, 0.2);
+        border-color: rgba(244, 67, 54, 0.4);
       }
 
       .status-voted {
-        background: rgba(88, 101, 242, 0.15);
-        color: var(--discord-blurple);
-        border: 1px solid rgba(88, 101, 242, 0.3);
+        background: rgba(88, 101, 242, 0.2);
+        border-color: rgba(88, 101, 242, 0.4);
       }
 
       /* Stats */
@@ -257,51 +276,77 @@
       .stat-value {
         font-size: 2.25rem;
         font-weight: 700;
-        color: var(--text-white);
         display: block;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
       }
 
       .stat-label {
         font-size: 0.8125rem;
-        color: var(--text-muted);
+        opacity: 0.85;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin-top: 0.25rem;
       }
 
+      /* Main content area */
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem;
+        position: relative;
+        z-index: 2;
+      }
+
       /* Voting info banner */
       .voting-banner {
-        background: var(--bg-card);
-        border: 1px solid var(--border-dark);
+        background: var(--bg-white);
         border-radius: 16px;
-        padding: 1.5rem;
+        padding: 2rem;
         margin-bottom: 2rem;
         text-align: center;
+        box-shadow: var(--shadow-soft);
+        border: 1px solid var(--border-light);
       }
 
       .voting-banner h2 {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: var(--text-white);
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-dark);
         margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .voting-banner h2 img {
+        width: 28px;
+        height: 28px;
       }
 
       .voting-banner p {
-        color: var(--text-muted);
-        font-size: 0.9375rem;
+        color: var(--text-gray);
+        font-size: 1rem;
       }
 
       .voting-period {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        background: rgba(255, 107, 53, 0.1);
-        color: var(--primary-orange);
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
+        background: linear-gradient(135deg, #ff6b6b 0%, #764ba2 100%);
+        color: white;
+        padding: 0.625rem 1.25rem;
+        border-radius: 50px;
         font-weight: 500;
         margin-top: 1rem;
         font-size: 0.875rem;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+      }
+
+      .voting-period img {
+        width: 18px;
+        height: 18px;
+        filter: brightness(0) invert(1);
       }
 
       /* Loading */
@@ -309,31 +354,33 @@
         text-align: center;
         padding: 4rem 2rem;
         font-size: 1rem;
-        color: var(--text-muted);
+        color: var(--text-gray);
       }
 
       .loading-spinner {
         width: 40px;
         height: 40px;
-        border: 3px solid var(--border-dark);
-        border-top-color: var(--primary-orange);
+        border: 3px solid var(--border-light);
+        border-top-color: var(--primary-coral);
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin: 0 auto 1rem;
       }
 
       @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+          transform: rotate(360deg);
+        }
       }
 
       /* Error */
       .error {
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.3);
+        background: #fff5f5;
+        border: 1px solid #ffcdd2;
         padding: 1.5rem;
         border-radius: 12px;
         text-align: center;
-        color: var(--error);
+        color: #c62828;
       }
 
       /* Projects grid */
@@ -344,35 +391,18 @@
       }
 
       .project-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-dark);
+        background: var(--bg-white);
+        border: 1px solid var(--border-light);
         border-radius: 16px;
         padding: 1.5rem;
         transition: all 0.3s ease;
         position: relative;
-        overflow: hidden;
-      }
-
-      .project-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: var(--gradient-warm);
-        opacity: 0;
-        transition: opacity 0.3s ease;
       }
 
       .project-card:hover {
-        background: var(--bg-card-hover);
+        box-shadow: var(--shadow-hover);
         transform: translateY(-4px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-      }
-
-      .project-card:hover::before {
-        opacity: 1;
+        border-color: var(--primary-coral);
       }
 
       .project-header {
@@ -383,14 +413,14 @@
       }
 
       .project-avatar {
-        width: 52px;
-        height: 52px;
+        width: 56px;
+        height: 56px;
         border-radius: 12px;
-        background: var(--gradient-warm);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 1.25rem;
         color: white;
         flex-shrink: 0;
@@ -405,18 +435,18 @@
 
       .project-name {
         font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--text-white);
+        font-weight: 700;
+        color: var(--text-dark);
         margin-bottom: 0.125rem;
       }
 
       .project-slug {
         font-size: 0.8125rem;
-        color: var(--text-muted);
+        color: var(--text-light);
       }
 
       .project-description {
-        color: var(--text-muted);
+        color: var(--text-gray);
         line-height: 1.6;
         margin-bottom: 1rem;
         font-size: 0.9375rem;
@@ -431,8 +461,8 @@
         gap: 1.5rem;
         margin-bottom: 1rem;
         padding: 1rem 0;
-        border-top: 1px solid var(--border-dark);
-        border-bottom: 1px solid var(--border-dark);
+        border-top: 1px solid var(--border-light);
+        border-bottom: 1px solid var(--border-light);
       }
 
       .meta-item {
@@ -442,15 +472,15 @@
 
       .meta-label {
         font-size: 0.6875rem;
-        color: var(--text-muted);
+        color: var(--text-light);
         text-transform: uppercase;
         letter-spacing: 0.05em;
       }
 
       .meta-value {
         font-size: 1rem;
-        font-weight: 600;
-        color: var(--text-white);
+        font-weight: 700;
+        color: var(--text-dark);
         margin-top: 0.125rem;
       }
 
@@ -464,10 +494,10 @@
       .tag {
         font-size: 0.6875rem;
         padding: 0.25rem 0.625rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid var(--border-dark);
+        background: var(--bg-light);
+        border: 1px solid var(--border-light);
         border-radius: 4px;
-        color: var(--text-muted);
+        color: var(--text-gray);
         text-transform: uppercase;
         letter-spacing: 0.03em;
       }
@@ -484,41 +514,70 @@
         align-items: center;
         gap: 0.5rem;
         font-weight: 500;
-        color: var(--text-muted);
+        color: var(--text-gray);
         text-decoration: none;
         font-size: 0.8125rem;
         transition: color 0.2s ease;
       }
 
       .project-link:hover {
-        color: var(--primary-orange);
+        color: var(--primary-coral);
+      }
+
+      .project-link img {
+        width: 16px;
+        height: 16px;
       }
 
       .vote-count {
         display: flex;
         align-items: center;
         gap: 0.375rem;
-        color: var(--text-muted);
+        color: var(--text-gray);
         font-size: 0.875rem;
       }
 
+      .vote-count img {
+        width: 18px;
+        height: 18px;
+      }
+
       .vote-count strong {
-        color: var(--text-white);
+        color: var(--text-dark);
+        font-weight: 700;
+      }
+
+      .project-vote-section {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-light);
       }
 
       /* Results section */
       .results-section {
         margin-top: 3rem;
-        padding-top: 2rem;
-        border-top: 1px solid var(--border-dark);
+        padding: 2rem;
+        background: var(--bg-white);
+        border-radius: 16px;
+        box-shadow: var(--shadow-soft);
+        border: 1px solid var(--border-light);
       }
 
       .results-section h2 {
         font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--text-white);
+        font-weight: 700;
+        color: var(--text-dark);
         margin-bottom: 1.5rem;
         text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .results-section h2 img {
+        width: 28px;
+        height: 28px;
       }
 
       .results-list {
@@ -531,16 +590,21 @@
         align-items: center;
         gap: 1rem;
         padding: 1rem;
-        background: var(--bg-card);
-        border: 1px solid var(--border-dark);
+        background: var(--bg-light);
+        border: 1px solid var(--border-light);
         border-radius: 12px;
         margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+      }
+
+      .result-item:hover {
+        border-color: var(--primary-coral);
       }
 
       .result-rank {
-        width: 32px;
-        height: 32px;
-        background: var(--gradient-warm);
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #ff6b6b 0%, #764ba2 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -552,11 +616,15 @@
       }
 
       .result-rank.rank-2 {
-        background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+        background: linear-gradient(135deg, #78909c 0%, #546e7a 100%);
       }
 
       .result-rank.rank-3 {
         background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+      }
+
+      .result-rank.rank-other {
+        background: var(--text-light);
       }
 
       .result-info {
@@ -564,27 +632,27 @@
       }
 
       .result-name {
-        font-weight: 600;
-        color: var(--text-white);
+        font-weight: 700;
+        color: var(--text-dark);
       }
 
       .result-votes {
         font-size: 0.875rem;
-        color: var(--text-muted);
+        color: var(--text-gray);
       }
 
       .result-bar {
-        height: 4px;
-        background: var(--border-dark);
-        border-radius: 2px;
+        height: 6px;
+        background: var(--border-light);
+        border-radius: 3px;
         margin-top: 0.5rem;
         overflow: hidden;
       }
 
       .result-bar-fill {
         height: 100%;
-        background: var(--gradient-warm);
-        border-radius: 2px;
+        background: linear-gradient(135deg, #ff6b6b 0%, #764ba2 100%);
+        border-radius: 3px;
         transition: width 0.5s ease;
       }
 
@@ -594,14 +662,17 @@
         bottom: 2rem;
         left: 50%;
         transform: translateX(-50%) translateY(100px);
-        background: var(--bg-card);
-        border: 1px solid var(--border-dark);
+        background: var(--bg-white);
+        border: 1px solid var(--border-light);
         padding: 1rem 1.5rem;
         border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
         opacity: 0;
         transition: all 0.3s ease;
         z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
       }
 
       .toast.show {
@@ -610,11 +681,16 @@
       }
 
       .toast.success {
-        border-color: var(--success);
+        border-left: 4px solid var(--success);
       }
 
       .toast.error {
-        border-color: var(--error);
+        border-left: 4px solid #f44336;
+      }
+
+      .toast img {
+        width: 24px;
+        height: 24px;
       }
 
       /* No projects */
@@ -622,7 +698,7 @@
         text-align: center;
         padding: 4rem 2rem;
         font-size: 1rem;
-        color: var(--text-muted);
+        color: var(--text-gray);
       }
 
       /* Responsive */
@@ -646,6 +722,10 @@
         .user-section {
           flex-direction: column;
         }
+
+        .hero-section {
+          padding: 2rem 1rem 3rem;
+        }
       }
 
       /* Discord icon */
@@ -653,17 +733,29 @@
         width: 20px;
         height: 20px;
       }
+
+      /* Icon styling */
+      .icon {
+        width: 20px;
+        height: 20px;
+      }
     </style>
   </head>
   <body>
-    <div class="container">
-      <header>
+    <div class="hero-section">
+      <div class="hero-content">
         <div class="logo-section">
-          <div class="logo">🏗️</div>
+          <div class="logo">
+            <img
+              src="./Game Making Software - Construct 3_files/construct-3-logo_v43.png"
+              alt="Construct"
+              onerror="this.parentElement.textContent='🏗️'"
+            />
+          </div>
           <h1>Construct Community</h1>
         </div>
         <p class="subtitle">Vote to allocate funds to your favorite projects</p>
-        
+
         <div class="user-section" id="user-section">
           <!-- User info or login button will be inserted here -->
         </div>
@@ -682,12 +774,28 @@
             <span class="stat-label">Votes This Month</span>
           </div>
         </div>
-      </header>
+      </div>
+    </div>
 
+    <div class="container">
       <div class="voting-banner" id="voting-banner">
-        <h2>🗳️ Monthly Project Vote</h2>
-        <p>Eligible members can vote once per month to allocate community funds to a project.</p>
+        <h2>
+          <img
+            src="./Game Making Software - Construct 3_files/favorite.svg"
+            alt="Vote"
+            onerror="this.textContent='🗳️'"
+          />
+          Monthly Project Vote
+        </h2>
+        <p>
+          Eligible members can vote once per month to allocate community funds
+          to a project.
+        </p>
         <div class="voting-period" id="voting-period">
+          <img
+            src="./Game Making Software - Construct 3_files/timer.svg"
+            alt="Calendar"
+          />
           <!-- Current month will be inserted -->
         </div>
       </div>
@@ -699,45 +807,61 @@
         </div>
       </div>
 
-      <div class="results-section" id="results-section" style="display: none;">
-        <h2>📊 Current Month Results</h2>
+      <div class="results-section" id="results-section" style="display: none">
+        <h2>
+          <img
+            src="./Game Making Software - Construct 3_files/crown.svg"
+            alt="Results"
+          />
+          Current Month Results
+        </h2>
         <div class="results-list" id="results-list">
           <!-- Results will be inserted here -->
         </div>
       </div>
     </div>
 
-    <div class="toast" id="toast"></div>
+    <div class="toast" id="toast">
+      <img
+        src="./Game Making Software - Construct 3_files/tick.svg"
+        alt=""
+        class="toast-icon"
+      />
+      <span class="toast-message"></span>
+    </div>
 
     <script>
-      const API_ENDPOINT = 'https://api.opencollective.com/graphql/v2';
-      const COLLECTIVE_SLUG = 'construct-community';
+      const API_ENDPOINT = "https://api.opencollective.com/graphql/v2";
+      const COLLECTIVE_SLUG = "construct-community";
 
       let currentUser = null;
       let hasVotedThisMonth = false;
       let monthlyResults = {};
 
       // Initialize
-      document.addEventListener('DOMContentLoaded', async () => {
+      document.addEventListener("DOMContentLoaded", async () => {
         updateVotingPeriod();
         await checkAuth();
-        await Promise.all([
-          fetchProjects(),
-          fetchVoteResults()
-        ]);
+        await Promise.all([fetchProjects(), fetchVoteResults()]);
       });
 
       function updateVotingPeriod() {
         const now = new Date();
-        const monthName = now.toLocaleString('default', { month: 'long', year: 'numeric' });
-        document.getElementById('voting-period').innerHTML = `📅 Voting Period: ${monthName}`;
+        const monthName = now.toLocaleString("default", {
+          month: "long",
+          year: "numeric",
+        });
+        document.getElementById("voting-period").innerHTML = `
+          <img src="./Game Making Software - Construct 3_files/timer.svg" alt="Calendar" onerror="this.textContent='📅'">
+          Voting Period: ${monthName}
+        `;
       }
 
       async function checkAuth() {
         try {
-          const response = await fetch('/api/me');
+          const response = await fetch("/api/me");
           const data = await response.json();
-          
+
           if (data.authenticated) {
             currentUser = data.user;
             hasVotedThisMonth = data.hasVotedThisMonth;
@@ -746,13 +870,13 @@
             renderLoginButton();
           }
         } catch (err) {
-          console.error('Auth check failed:', err);
+          console.error("Auth check failed:", err);
           renderLoginButton();
         }
       }
 
       function renderLoginButton() {
-        const userSection = document.getElementById('user-section');
+        const userSection = document.getElementById("user-section");
         userSection.innerHTML = `
           <a href="/auth/discord" class="btn btn-discord">
             <svg class="discord-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -764,12 +888,12 @@
       }
 
       function renderUserSection() {
-        const userSection = document.getElementById('user-section');
-        const avatarUrl = currentUser.avatar 
+        const userSection = document.getElementById("user-section");
+        const avatarUrl = currentUser.avatar
           ? `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`
           : null;
-        
-        let statusBadge = '';
+
+        let statusBadge = "";
         if (!currentUser.isGuildMember) {
           statusBadge = `<span class="status-badge status-ineligible">⚠️ Not a server member</span>`;
         } else if (!currentUser.hasRequiredRole) {
@@ -779,11 +903,15 @@
         } else {
           statusBadge = `<span class="status-badge status-eligible">✓ Eligible to vote</span>`;
         }
-        
+
         userSection.innerHTML = `
           <div class="user-info">
             <div class="user-avatar">
-              ${avatarUrl ? `<img src="${avatarUrl}" alt="${currentUser.username}">` : currentUser.username.charAt(0).toUpperCase()}
+              ${
+                avatarUrl
+                  ? `<img src="${avatarUrl}" alt="${currentUser.username}">`
+                  : currentUser.username.charAt(0).toUpperCase()
+              }
             </div>
             <span class="user-name">${currentUser.username}</span>
           </div>
@@ -794,18 +922,13 @@
 
       async function logout() {
         try {
-          await fetch('/auth/logout', { method: 'POST' });
+          await fetch("/auth/logout", { method: "POST" });
           currentUser = null;
           hasVotedThisMonth = false;
           renderLoginButton();
-          // Re-render projects to remove vote buttons
-          const contentDiv = document.getElementById('content');
-          const projects = contentDiv.querySelector('.projects-grid');
-          if (projects) {
-            await fetchProjects();
-          }
+          await fetchProjects();
         } catch (err) {
-          console.error('Logout failed:', err);
+          console.error("Logout failed:", err);
         }
       }
 
@@ -856,12 +979,12 @@
 
         try {
           const response = await fetch(API_ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               query,
-              variables: { slug: COLLECTIVE_SLUG }
-            })
+              variables: { slug: COLLECTIVE_SLUG },
+            }),
           });
 
           const result = await response.json();
@@ -872,90 +995,106 @@
 
           renderProjects(result.data.account);
         } catch (error) {
-          console.error('Error fetching projects:', error);
+          console.error("Error fetching projects:", error);
           showError(error);
         }
       }
 
       async function fetchVoteResults() {
         try {
-          const response = await fetch('/api/votes/current');
+          const response = await fetch("/api/votes/current");
           const data = await response.json();
           monthlyResults = data.results;
           updateVoteCount();
           renderResults();
         } catch (err) {
-          console.error('Error fetching vote results:', err);
+          console.error("Error fetching vote results:", err);
         }
       }
 
       function updateVoteCount() {
-        const totalVotes = Object.values(monthlyResults).reduce((sum, p) => sum + p.count, 0);
-        document.getElementById('vote-count').textContent = totalVotes;
+        const totalVotes = Object.values(monthlyResults).reduce(
+          (sum, p) => sum + p.count,
+          0
+        );
+        document.getElementById("vote-count").textContent = totalVotes;
       }
 
       function formatCurrency(valueInCents, currency) {
         const value = valueInCents / 100;
-        return new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: currency || 'USD',
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: currency || "USD",
           minimumFractionDigits: 0,
-          maximumFractionDigits: 0
+          maximumFractionDigits: 0,
         }).format(value);
       }
 
       function getInitials(name) {
         return name
-          .split(' ')
-          .map(word => word[0])
+          .split(" ")
+          .map((word) => word[0])
           .slice(0, 2)
-          .join('')
+          .join("")
           .toUpperCase();
       }
 
       function renderProjects(accountData) {
-        const contentDiv = document.getElementById('content');
+        const contentDiv = document.getElementById("content");
         const projects = accountData.childrenAccounts.nodes;
 
         // Update stats
-        document.getElementById('project-count').textContent = projects.length;
+        document.getElementById("project-count").textContent = projects.length;
 
         const totalBalance = projects.reduce((sum, p) => {
           return sum + (p.stats?.balance?.valueInCents || 0);
         }, 0);
-        document.getElementById('total-balance').textContent = formatCurrency(totalBalance, 'USD');
+        document.getElementById("total-balance").textContent = formatCurrency(
+          totalBalance,
+          "USD"
+        );
 
         if (projects.length === 0) {
-          contentDiv.innerHTML = '<div class="no-projects">No active projects found.</div>';
+          contentDiv.innerHTML =
+            '<div class="no-projects">No active projects found.</div>';
           return;
         }
 
-        const projectsHTML = projects.map(project => {
-          const balance = project.stats?.balance?.valueInCents || 0;
-          const currency = project.stats?.balance?.currency || 'USD';
-          const totalReceived = project.stats?.totalAmountReceived?.valueInCents || 0;
-          const backers = project.members?.totalCount || 0;
-          const tags = project.tags || [];
-          const projectVotes = monthlyResults[project.slug]?.count || 0;
+        const projectsHTML = projects
+          .map((project) => {
+            const balance = project.stats?.balance?.valueInCents || 0;
+            const currency = project.stats?.balance?.currency || "USD";
+            const totalReceived =
+              project.stats?.totalAmountReceived?.valueInCents || 0;
+            const backers = project.members?.totalCount || 0;
+            const tags = project.tags || [];
+            const projectVotes = monthlyResults[project.slug]?.count || 0;
 
-          const canVote = currentUser?.hasRequiredRole && !hasVotedThisMonth;
-          
-          let voteButton = '';
-          if (currentUser) {
-            if (hasVotedThisMonth) {
-              voteButton = `<button class="btn btn-vote btn-voted" disabled>✓ Voted</button>`;
-            } else if (currentUser.hasRequiredRole) {
-              voteButton = `<button class="btn btn-vote" onclick="vote('${project.slug}', '${project.name.replace(/'/g, "\\'")}')">Vote for this</button>`;
+            let voteButton = "";
+            if (currentUser) {
+              if (hasVotedThisMonth) {
+                voteButton = `<button class="btn btn-vote btn-voted" disabled>
+                <img src="./Game Making Software - Construct 3_files/tick.svg" alt="" style="width:16px;height:16px;filter:brightness(0) invert(1);">
+                Voted
+              </button>`;
+              } else if (currentUser.hasRequiredRole) {
+                voteButton = `<button class="btn btn-vote" onclick="vote('${
+                  project.slug
+                }', '${project.name.replace(/'/g, "\\'")}')">
+                <img src="./Game Making Software - Construct 3_files/favorite.svg" alt="" style="width:16px;height:16px;filter:brightness(0) invert(1);">
+                Vote for this
+              </button>`;
+              }
             }
-          }
 
-          return `
+            return `
             <div class="project-card">
               <div class="project-header">
                 <div class="project-avatar">
-                  ${project.imageUrl 
-                    ? `<img src="${project.imageUrl}" alt="${project.name}">`
-                    : getInitials(project.name)
+                  ${
+                    project.imageUrl
+                      ? `<img src="${project.imageUrl}" alt="${project.name}">`
+                      : getInitials(project.name)
                   }
                 </div>
                 <div class="project-info">
@@ -964,19 +1103,26 @@
                 </div>
               </div>
               
-              ${project.description 
-                ? `<div class="project-description">${project.description}</div>`
-                : ''
+              ${
+                project.description
+                  ? `<div class="project-description">${project.description}</div>`
+                  : ""
               }
               
               <div class="project-meta">
                 <div class="meta-item">
                   <span class="meta-label">Balance</span>
-                  <span class="meta-value">${formatCurrency(balance, currency)}</span>
+                  <span class="meta-value">${formatCurrency(
+                    balance,
+                    currency
+                  )}</span>
                 </div>
                 <div class="meta-item">
                   <span class="meta-label">Received</span>
-                  <span class="meta-value">${formatCurrency(totalReceived, currency)}</span>
+                  <span class="meta-value">${formatCurrency(
+                    totalReceived,
+                    currency
+                  )}</span>
                 </div>
                 <div class="meta-item">
                   <span class="meta-label">Backers</span>
@@ -984,28 +1130,44 @@
                 </div>
               </div>
 
-              ${tags.length > 0 ? `
+              ${
+                tags.length > 0
+                  ? `
                 <div class="project-tags">
-                  ${tags.slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('')}
+                  ${tags
+                    .slice(0, 3)
+                    .map((tag) => `<span class="tag">${tag}</span>`)
+                    .join("")}
                 </div>
-              ` : ''}
+              `
+                  : ""
+              }
               
               <div class="project-footer">
                 <a href="https://opencollective.com/${project.slug}" 
                    target="_blank" 
                    rel="noopener noreferrer" 
                    class="project-link">
-                  View on Open Collective →
+                  <img src="./Game Making Software - Construct 3_files/right-arrow.svg" alt="">
+                  View on Open Collective
                 </a>
                 <div class="vote-count">
-                  🗳️ <strong>${projectVotes}</strong> vote${projectVotes !== 1 ? 's' : ''}
+                  <img src="./Game Making Software - Construct 3_files/favorite.svg" alt="Votes">
+                  <strong>${projectVotes}</strong> vote${
+              projectVotes !== 1 ? "s" : ""
+            }
                 </div>
               </div>
               
-              ${voteButton ? `<div style="margin-top: 1rem;">${voteButton}</div>` : ''}
+              ${
+                voteButton
+                  ? `<div class="project-vote-section">${voteButton}</div>`
+                  : ""
+              }
             </div>
           `;
-        }).join('');
+          })
+          .join("");
 
         contentDiv.innerHTML = `<div class="projects-grid">${projectsHTML}</div>`;
       }
@@ -1016,10 +1178,10 @@
         }
 
         try {
-          const response = await fetch('/api/vote', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ projectSlug, projectName })
+          const response = await fetch("/api/vote", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ projectSlug, projectName }),
           });
 
           const data = await response.json();
@@ -1027,61 +1189,65 @@
           if (response.ok) {
             hasVotedThisMonth = true;
             monthlyResults = data.results;
-            showToast(`Successfully voted for ${projectName}!`, 'success');
+            showToast(`Successfully voted for ${projectName}!`, "success");
             renderUserSection();
             await fetchProjects();
             updateVoteCount();
             renderResults();
           } else {
-            showToast(data.error || 'Failed to record vote', 'error');
+            showToast(data.error || "Failed to record vote", "error");
           }
         } catch (err) {
-          console.error('Vote failed:', err);
-          showToast('Failed to record vote. Please try again.', 'error');
+          console.error("Vote failed:", err);
+          showToast("Failed to record vote. Please try again.", "error");
         }
       }
 
       function renderResults() {
-        const resultsSection = document.getElementById('results-section');
-        const resultsList = document.getElementById('results-list');
-        
+        const resultsSection = document.getElementById("results-section");
+        const resultsList = document.getElementById("results-list");
+
         const sortedResults = Object.entries(monthlyResults)
           .map(([slug, data]) => ({ slug, ...data }))
           .sort((a, b) => b.count - a.count);
 
         if (sortedResults.length === 0) {
-          resultsSection.style.display = 'none';
+          resultsSection.style.display = "none";
           return;
         }
 
-        resultsSection.style.display = 'block';
+        resultsSection.style.display = "block";
         const maxVotes = sortedResults[0]?.count || 1;
 
-        resultsList.innerHTML = sortedResults.map((result, index) => {
-          const percentage = (result.count / maxVotes) * 100;
-          let rankClass = '';
-          if (index === 0) rankClass = '';
-          else if (index === 1) rankClass = 'rank-2';
-          else if (index === 2) rankClass = 'rank-3';
-          else rankClass = 'rank-other';
+        resultsList.innerHTML = sortedResults
+          .map((result, index) => {
+            const percentage = (result.count / maxVotes) * 100;
+            let rankClass = "";
+            if (index === 0) rankClass = "";
+            else if (index === 1) rankClass = "rank-2";
+            else if (index === 2) rankClass = "rank-3";
+            else rankClass = "rank-other";
 
-          return `
+            return `
             <div class="result-item">
               <div class="result-rank ${rankClass}">${index + 1}</div>
               <div class="result-info">
                 <div class="result-name">${result.projectName}</div>
-                <div class="result-votes">${result.count} vote${result.count !== 1 ? 's' : ''}</div>
+                <div class="result-votes">${result.count} vote${
+              result.count !== 1 ? "s" : ""
+            }</div>
                 <div class="result-bar">
                   <div class="result-bar-fill" style="width: ${percentage}%"></div>
                 </div>
               </div>
             </div>
           `;
-        }).join('');
+          })
+          .join("");
       }
 
       function showError(error) {
-        const contentDiv = document.getElementById('content');
+        const contentDiv = document.getElementById("content");
         contentDiv.innerHTML = `
           <div class="error">
             <h2>Error Loading Projects</h2>
@@ -1090,30 +1256,40 @@
         `;
       }
 
-      function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
+      function showToast(message, type = "success") {
+        const toast = document.getElementById("toast");
+        const icon = toast.querySelector(".toast-icon");
+        const msgSpan = toast.querySelector(".toast-message");
+
+        if (type === "success") {
+          icon.src = "./Game Making Software - Construct 3_files/tick.svg";
+        } else {
+          icon.src = "./Game Making Software - Construct 3_files/close.svg";
+        }
+
+        msgSpan.textContent = message;
         toast.className = `toast ${type} show`;
-        
+
         setTimeout(() => {
-          toast.classList.remove('show');
+          toast.classList.remove("show");
         }, 3000);
       }
 
       // Check for OAuth errors in URL
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has('error')) {
-        const error = urlParams.get('error');
-        let message = 'Authentication failed';
-        if (error === 'oauth_denied') message = 'Discord authorization was denied';
-        else if (error === 'token_error') message = 'Failed to get access token';
-        else if (error === 'oauth_error') message = 'OAuth authentication error';
-        
-        showToast(message, 'error');
-        // Clean URL
-        window.history.replaceState({}, document.title, '/');
+      if (urlParams.has("error")) {
+        const error = urlParams.get("error");
+        let message = "Authentication failed";
+        if (error === "oauth_denied")
+          message = "Discord authorization was denied";
+        else if (error === "token_error")
+          message = "Failed to get access token";
+        else if (error === "oauth_error")
+          message = "OAuth authentication error";
+
+        showToast(message, "error");
+        window.history.replaceState({}, document.title, "/");
       }
     </script>
   </body>
 </html>
-

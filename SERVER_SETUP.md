@@ -40,11 +40,13 @@ PORT=3000
 ### 3. Start the Server
 
 For development (with auto-reload):
+
 ```bash
 npm run dev
 ```
 
 For production:
+
 ```bash
 npm start
 ```
@@ -90,33 +92,37 @@ open collective vote/
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Main application page |
-| GET | `/api/me` | Get current user info |
-| GET | `/auth/discord` | Start Discord OAuth flow |
-| GET | `/auth/discord/callback` | OAuth callback handler |
-| POST | `/auth/logout` | Logout current user |
-| POST | `/api/vote` | Submit a vote |
-| GET | `/api/votes/current` | Get current month's results |
-| GET | `/api/votes/history` | Get all voting history |
+| Method | Endpoint                 | Description                 |
+| ------ | ------------------------ | --------------------------- |
+| GET    | `/`                      | Main application page       |
+| GET    | `/api/me`                | Get current user info       |
+| GET    | `/auth/discord`          | Start Discord OAuth flow    |
+| GET    | `/auth/discord/callback` | OAuth callback handler      |
+| POST   | `/auth/logout`           | Logout current user         |
+| POST   | `/api/vote`              | Submit a vote               |
+| GET    | `/api/votes/current`     | Get current month's results |
+| GET    | `/api/votes/history`     | Get all voting history      |
 
 ## Troubleshooting
 
 ### "Cannot GET /" Error
+
 Make sure the `public` folder exists with `index.html` inside it.
 
 ### Discord Login Not Working
+
 1. Check that your redirect URI in Discord Developer Portal matches exactly: `http://localhost:3000/auth/discord/callback`
 2. Verify all environment variables are set correctly
 3. Check the server console for error messages
 
 ### Role Check Always Fails
+
 1. Ensure the bot is in your Discord server
 2. Verify SERVER MEMBERS INTENT is enabled for your bot
 3. Make sure the role ID is correct (enable Developer Mode in Discord to copy IDs)
 
 ### Votes Not Persisting
+
 Check that the server has write permissions in the project directory for `votes.json`.
 
 ## Production Deployment
@@ -143,7 +149,7 @@ NODE_ENV=production npm start
 Edit the `COLLECTIVE_SLUG` constant in `public/index.html`:
 
 ```javascript
-const COLLECTIVE_SLUG = 'your-collective-slug';
+const COLLECTIVE_SLUG = "your-collective-slug";
 ```
 
 ### Adjust Voting Period
@@ -154,7 +160,7 @@ Currently set to monthly. To change this, modify the `getCurrentMonth()` functio
 // For weekly voting:
 function getCurrentWeek() {
   const now = new Date();
-  const weekNum = Math.ceil((now.getDate()) / 7);
+  const weekNum = Math.ceil(now.getDate() / 7);
   return `${now.getFullYear()}-${now.getMonth() + 1}-W${weekNum}`;
 }
 ```
@@ -164,7 +170,6 @@ function getCurrentWeek() {
 Modify the role check in `server.js`:
 
 ```javascript
-const requiredRoles = ['role_id_1', 'role_id_2'];
-hasRequiredRole = requiredRoles.some(role => member.roles.includes(role));
+const requiredRoles = ["role_id_1", "role_id_2"];
+hasRequiredRole = requiredRoles.some((role) => member.roles.includes(role));
 ```
-
