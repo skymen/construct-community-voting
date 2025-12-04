@@ -290,6 +290,103 @@
         color: var(--text-light);
       }
 
+      /* Toggle Switch */
+      .toggle-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--bg-white);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .toggle-info h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.25rem;
+      }
+
+      .toggle-info p {
+        font-size: 0.875rem;
+        color: var(--text-gray);
+        margin: 0;
+      }
+
+      .toggle-switch {
+        position: relative;
+        width: 56px;
+        height: 28px;
+        flex-shrink: 0;
+      }
+
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--border-light);
+        transition: 0.3s;
+        border-radius: 28px;
+      }
+
+      .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.3s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .toggle-switch input:checked + .toggle-slider {
+        background-color: var(--success);
+      }
+
+      .toggle-switch input:checked + .toggle-slider:before {
+        transform: translateX(28px);
+      }
+
+      .toggle-switch input:disabled + .toggle-slider {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .voting-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-left: 0.75rem;
+      }
+
+      .voting-status.enabled {
+        background: rgba(76, 175, 80, 0.1);
+        color: var(--success);
+      }
+
+      .voting-status.disabled {
+        background: rgba(244, 67, 54, 0.1);
+        color: var(--danger);
+      }
+
       /* Empty state */
       .empty-state {
         text-align: center;
@@ -517,6 +614,27 @@
         </button>
       </div>
 
+      <div class="toggle-card">
+        <div class="toggle-info">
+          <h3>
+            Voting Status
+            <span class="voting-status enabled" id="voting-status-badge"
+              >Enabled</span
+            >
+          </h3>
+          <p>When disabled, members cannot submit new votes</p>
+        </div>
+        <label class="toggle-switch">
+          <input
+            type="checkbox"
+            id="voting-toggle"
+            checked
+            onchange="toggleVoting(this.checked)"
+          />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
       <div class="stats-row" id="stats-row">
         <!-- Stats will be inserted here -->
       </div>
@@ -583,8 +701,57 @@
       // Initialize
       document.addEventListener("DOMContentLoaded", async () => {
         await checkAuth();
-        await loadVotes();
+        await Promise.all([loadVotes(), loadVotingStatus()]);
       });
+
+      async function loadVotingStatus() {
+        try {
+          const response = await fetch("/api/admin/voting-status");
+          const data = await response.json();
+          updateVotingStatusUI(data.votingEnabled);
+        } catch (err) {
+          console.error("Error loading voting status:", err);
+        }
+      }
+
+      function updateVotingStatusUI(enabled) {
+        const toggle = document.getElementById("voting-toggle");
+        const badge = document.getElementById("voting-status-badge");
+
+        toggle.checked = enabled;
+        badge.textContent = enabled ? "Enabled" : "Disabled";
+        badge.className = `voting-status ${enabled ? "enabled" : "disabled"}`;
+      }
+
+      async function toggleVoting(enabled) {
+        const toggle = document.getElementById("voting-toggle");
+        toggle.disabled = true;
+
+        try {
+          const response = await fetch("/api/admin/voting-status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ enabled }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            updateVotingStatusUI(data.votingEnabled);
+            showToast(data.message, "success");
+          } else {
+            // Revert toggle on error
+            toggle.checked = !enabled;
+            showToast(data.error || "Failed to update voting status", "error");
+          }
+        } catch (err) {
+          console.error("Toggle voting failed:", err);
+          toggle.checked = !enabled;
+          showToast("Failed to update voting status", "error");
+        } finally {
+          toggle.disabled = false;
+        }
+      }
 
       async function checkAuth() {
         try {

@@ -29,12 +29,29 @@ const VOTES_FILE = path.join(__dirname, "votes.json");
 function loadVotes() {
   try {
     if (fs.existsSync(VOTES_FILE)) {
-      return JSON.parse(fs.readFileSync(VOTES_FILE, "utf8"));
+      const data = JSON.parse(fs.readFileSync(VOTES_FILE, "utf8"));
+      // Ensure votingEnabled exists (default to true)
+      if (data.votingEnabled === undefined) {
+        data.votingEnabled = true;
+      }
+      return data;
     }
   } catch (err) {
     console.error("Error loading votes:", err);
   }
-  return { votes: [], monthlyTotals: {} };
+  return { votes: [], monthlyTotals: {}, votingEnabled: true };
+}
+
+function isVotingEnabled() {
+  const votes = loadVotes();
+  return votes.votingEnabled !== false;
+}
+
+function setVotingEnabled(enabled) {
+  const votes = loadVotes();
+  votes.votingEnabled = enabled;
+  saveVotes(votes);
+  return { success: true, votingEnabled: enabled };
 }
 
 function saveVotes(data) {
@@ -280,6 +297,7 @@ app.get("/api/me", (req, res) => {
       authenticated: true,
       user: req.session.user,
       hasVotedThisMonth: !!currentVote,
+      votingEnabled: isVotingEnabled(),
       currentVote: currentVote
         ? {
             projectSlug: currentVote.projectSlug,
@@ -288,7 +306,7 @@ app.get("/api/me", (req, res) => {
         : null,
     });
   } else {
-    res.json({ authenticated: false });
+    res.json({ authenticated: false, votingEnabled: isVotingEnabled() });
   }
 });
 
@@ -395,6 +413,11 @@ app.post("/auth/logout", (req, res) => {
 
 // Vote for a project
 app.post("/api/vote", requireAuth, requireRole, (req, res) => {
+  // Check if voting is enabled
+  if (!isVotingEnabled()) {
+    return res.status(403).json({ error: "Voting is currently disabled" });
+  }
+
   const { projectSlug, projectName } = req.body;
 
   if (!projectSlug || !projectName) {
@@ -512,6 +535,29 @@ app.delete("/api/admin/votes", requireAuth, requireAdmin, (req, res) => {
   } else {
     res.status(400).json({ error: result.error });
   }
+});
+
+// Get voting status (admin only)
+app.get("/api/admin/voting-status", requireAuth, requireAdmin, (req, res) => {
+  res.json({
+    votingEnabled: isVotingEnabled(),
+  });
+});
+
+// Toggle voting status (admin only)
+app.post("/api/admin/voting-status", requireAuth, requireAdmin, (req, res) => {
+  const { enabled } = req.body;
+
+  if (typeof enabled !== "boolean") {
+    return res.status(400).json({ error: "enabled must be a boolean" });
+  }
+
+  const result = setVotingEnabled(enabled);
+  res.json({
+    success: true,
+    votingEnabled: result.votingEnabled,
+    message: enabled ? "Voting has been enabled" : "Voting has been disabled",
+  });
 });
 
 // Start server
