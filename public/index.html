@@ -12,25 +12,21 @@
     />
     <style>
       :root {
-        --primary-coral: #ff6b6b;
-        --primary-coral-dark: #e85555;
-        --primary-blue: #4a90d9;
+        --primary-pink: #dc0d8a;
+        --primary-pink-dark: #b50a72;
+        --primary-purple: #b721ff;
+        --primary-cyan: #21d4fd;
         --discord-blurple: #5865f2;
         --discord-blurple-dark: #4752c4;
         --bg-white: #ffffff;
         --bg-light: #f8f9fa;
-        --bg-gradient-top: linear-gradient(
-          135deg,
-          #667eea 0%,
-          #764ba2 50%,
-          #ff6b6b 100%
-        );
         --text-dark: #2b2b2b;
         --text-gray: #666666;
         --text-light: #999999;
         --border-light: #e0e0e0;
         --success: #4caf50;
         --warning: #ff9800;
+        --project-avatar-bg: #2b2b2b;
         --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.08);
         --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
       }
@@ -51,14 +47,9 @@
         min-height: 100vh;
       }
 
-      /* Header section with gradient */
+      /* Header section with Construct gradient */
       .hero-section {
-        background: linear-gradient(
-          135deg,
-          #667eea 0%,
-          #764ba2 50%,
-          #ff6b6b 100%
-        );
+        background: linear-gradient(-20deg, #b721ff 0%, #21d4fd 100%);
         padding: 3rem 1.5rem 4rem;
         position: relative;
         overflow: hidden;
@@ -206,17 +197,17 @@
       }
 
       .btn-vote {
-        background: var(--primary-coral);
+        background: var(--primary-pink);
         color: white;
         padding: 0.625rem 1.25rem;
         font-size: 0.875rem;
-        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        box-shadow: 0 4px 15px rgba(220, 13, 138, 0.3);
       }
 
       .btn-vote:hover:not(:disabled) {
-        background: var(--primary-coral-dark);
+        background: var(--primary-pink-dark);
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        box-shadow: 0 6px 20px rgba(220, 13, 138, 0.4);
       }
 
       .btn-vote:disabled {
@@ -333,14 +324,14 @@
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        background: linear-gradient(135deg, #ff6b6b 0%, #764ba2 100%);
+        background: var(--primary-pink);
         color: white;
         padding: 0.625rem 1.25rem;
         border-radius: 50px;
         font-weight: 500;
         margin-top: 1rem;
         font-size: 0.875rem;
-        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        box-shadow: 0 4px 15px rgba(220, 13, 138, 0.3);
       }
 
       .voting-period img {
@@ -361,7 +352,7 @@
         width: 40px;
         height: 40px;
         border: 3px solid var(--border-light);
-        border-top-color: var(--primary-coral);
+        border-top-color: var(--primary-pink);
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin: 0 auto 1rem;
@@ -402,7 +393,7 @@
       .project-card:hover {
         box-shadow: var(--shadow-hover);
         transform: translateY(-4px);
-        border-color: var(--primary-coral);
+        border-color: var(--primary-pink);
       }
 
       .project-header {
@@ -416,7 +407,6 @@
         width: 56px;
         height: 56px;
         border-radius: 12px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -521,7 +511,7 @@
       }
 
       .project-link:hover {
-        color: var(--primary-coral);
+        color: var(--primary-pink);
       }
 
       .project-link img {
@@ -598,13 +588,13 @@
       }
 
       .result-item:hover {
-        border-color: var(--primary-coral);
+        border-color: var(--primary-pink);
       }
 
       .result-rank {
         width: 36px;
         height: 36px;
-        background: linear-gradient(135deg, #ff6b6b 0%, #764ba2 100%);
+        background: linear-gradient(-20deg, #b721ff 0%, #21d4fd 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -616,11 +606,11 @@
       }
 
       .result-rank.rank-2 {
-        background: linear-gradient(135deg, #78909c 0%, #546e7a 100%);
+        background: linear-gradient(-20deg, #78909c 0%, #546e7a 100%);
       }
 
       .result-rank.rank-3 {
-        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        background: linear-gradient(-20deg, #d97706 0%, #b45309 100%);
       }
 
       .result-rank.rank-other {
@@ -651,7 +641,7 @@
 
       .result-bar-fill {
         height: 100%;
-        background: linear-gradient(135deg, #ff6b6b 0%, #764ba2 100%);
+        background: linear-gradient(-20deg, #b721ff 0%, #21d4fd 100%);
         border-radius: 3px;
         transition: width 0.5s ease;
       }
@@ -747,7 +737,7 @@
         <div class="logo-section">
           <div class="logo">
             <img
-              src="./Game Making Software - Construct 3_files/construct-3-logo_v43.png"
+              src="./assets/construct-3-logo_v43.png"
               alt="Construct"
               onerror="this.parentElement.textContent='🏗️'"
             />
@@ -781,7 +771,7 @@
       <div class="voting-banner" id="voting-banner">
         <h2>
           <img
-            src="./Game Making Software - Construct 3_files/favorite.svg"
+            src="./assets/favorite.svg"
             alt="Vote"
             onerror="this.textContent='🗳️'"
           />
@@ -792,10 +782,7 @@
           to a project.
         </p>
         <div class="voting-period" id="voting-period">
-          <img
-            src="./Game Making Software - Construct 3_files/timer.svg"
-            alt="Calendar"
-          />
+          <img src="./assets/timer.svg" alt="Calendar" />
           <!-- Current month will be inserted -->
         </div>
       </div>
@@ -809,10 +796,7 @@
 
       <div class="results-section" id="results-section" style="display: none">
         <h2>
-          <img
-            src="./Game Making Software - Construct 3_files/crown.svg"
-            alt="Results"
-          />
+          <img src="./assets/crown.svg" alt="Results" />
           Current Month Results
         </h2>
         <div class="results-list" id="results-list">
@@ -822,11 +806,7 @@
     </div>
 
     <div class="toast" id="toast">
-      <img
-        src="./Game Making Software - Construct 3_files/tick.svg"
-        alt=""
-        class="toast-icon"
-      />
+      <img src="./assets/tick.svg" alt="" class="toast-icon" />
       <span class="toast-message"></span>
     </div>
 
@@ -852,7 +832,7 @@
           year: "numeric",
         });
         document.getElementById("voting-period").innerHTML = `
-          <img src="./Game Making Software - Construct 3_files/timer.svg" alt="Calendar" onerror="this.textContent='📅'">
+          <img src="./assets/timer.svg" alt="Calendar" onerror="this.textContent='📅'">
           Voting Period: ${monthName}
         `;
       }
@@ -1074,98 +1054,98 @@
             if (currentUser) {
               if (hasVotedThisMonth) {
                 voteButton = `<button class="btn btn-vote btn-voted" disabled>
-                <img src="./Game Making Software - Construct 3_files/tick.svg" alt="" style="width:16px;height:16px;filter:brightness(0) invert(1);">
-                Voted
-              </button>`;
+                  <img src="./assets/tick.svg" alt="" style="width:16px;height:16px;filter:brightness(0) invert(1);">
+                  Voted
+                </button>`;
               } else if (currentUser.hasRequiredRole) {
                 voteButton = `<button class="btn btn-vote" onclick="vote('${
                   project.slug
                 }', '${project.name.replace(/'/g, "\\'")}')">
-                <img src="./Game Making Software - Construct 3_files/favorite.svg" alt="" style="width:16px;height:16px;filter:brightness(0) invert(1);">
-                Vote for this
-              </button>`;
+                  <img src="./assets/favorite.svg" alt="" style="width:16px;height:16px;filter:brightness(0) invert(1);">
+                  Vote for this
+                </button>`;
               }
             }
 
             return `
-            <div class="project-card">
-              <div class="project-header">
-                <div class="project-avatar">
-                  ${
-                    project.imageUrl
-                      ? `<img src="${project.imageUrl}" alt="${project.name}">`
-                      : getInitials(project.name)
-                  }
+              <div class="project-card">
+                <div class="project-header">
+                  <div class="project-avatar">
+                    ${
+                      project.imageUrl
+                        ? `<img src="${project.imageUrl}" alt="${project.name}">`
+                        : getInitials(project.name)
+                    }
+                  </div>
+                  <div class="project-info">
+                    <div class="project-name">${project.name}</div>
+                    <div class="project-slug">@${project.slug}</div>
+                  </div>
                 </div>
-                <div class="project-info">
-                  <div class="project-name">${project.name}</div>
-                  <div class="project-slug">@${project.slug}</div>
+                
+                ${
+                  project.description
+                    ? `<div class="project-description">${project.description}</div>`
+                    : ""
+                }
+                
+                <div class="project-meta">
+                  <div class="meta-item">
+                    <span class="meta-label">Balance</span>
+                    <span class="meta-value">${formatCurrency(
+                      balance,
+                      currency
+                    )}</span>
+                  </div>
+                  <div class="meta-item">
+                    <span class="meta-label">Received</span>
+                    <span class="meta-value">${formatCurrency(
+                      totalReceived,
+                      currency
+                    )}</span>
+                  </div>
+                  <div class="meta-item">
+                    <span class="meta-label">Backers</span>
+                    <span class="meta-value">${backers}</span>
+                  </div>
                 </div>
-              </div>
-              
-              ${
-                project.description
-                  ? `<div class="project-description">${project.description}</div>`
-                  : ""
-              }
-              
-              <div class="project-meta">
-                <div class="meta-item">
-                  <span class="meta-label">Balance</span>
-                  <span class="meta-value">${formatCurrency(
-                    balance,
-                    currency
-                  )}</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-label">Received</span>
-                  <span class="meta-value">${formatCurrency(
-                    totalReceived,
-                    currency
-                  )}</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-label">Backers</span>
-                  <span class="meta-value">${backers}</span>
-                </div>
-              </div>
 
-              ${
-                tags.length > 0
-                  ? `
-                <div class="project-tags">
-                  ${tags
-                    .slice(0, 3)
-                    .map((tag) => `<span class="tag">${tag}</span>`)
-                    .join("")}
-                </div>
-              `
-                  : ""
-              }
-              
-              <div class="project-footer">
-                <a href="https://opencollective.com/${project.slug}" 
-                   target="_blank" 
-                   rel="noopener noreferrer" 
-                   class="project-link">
-                  <img src="./Game Making Software - Construct 3_files/right-arrow.svg" alt="">
-                  View on Open Collective
-                </a>
-                <div class="vote-count">
-                  <img src="./Game Making Software - Construct 3_files/favorite.svg" alt="Votes">
-                  <strong>${projectVotes}</strong> vote${
+                ${
+                  tags.length > 0
+                    ? `
+                  <div class="project-tags">
+                    ${tags
+                      .slice(0, 3)
+                      .map((tag) => `<span class="tag">${tag}</span>`)
+                      .join("")}
+                  </div>
+                `
+                    : ""
+                }
+                
+                <div class="project-footer">
+                  <a href="https://opencollective.com/${project.slug}" 
+                     target="_blank" 
+                     rel="noopener noreferrer" 
+                     class="project-link">
+                    <img src="./assets/right-arrow.svg" alt="">
+                    View on Open Collective
+                  </a>
+                  <div class="vote-count">
+                    <img src="./assets/favorite.svg" alt="Votes">
+                    <strong>${projectVotes}</strong> vote${
               projectVotes !== 1 ? "s" : ""
             }
+                  </div>
                 </div>
+                
+                ${
+                  voteButton
+                    ? `<div class="project-vote-section">${voteButton}</div>`
+                    : ""
+                }
               </div>
-              
-              ${
-                voteButton
-                  ? `<div class="project-vote-section">${voteButton}</div>`
-                  : ""
-              }
-            </div>
-          `;
+            `;
           })
           .join("");
 
@@ -1229,19 +1209,19 @@
             else rankClass = "rank-other";
 
             return `
-            <div class="result-item">
-              <div class="result-rank ${rankClass}">${index + 1}</div>
-              <div class="result-info">
-                <div class="result-name">${result.projectName}</div>
-                <div class="result-votes">${result.count} vote${
+              <div class="result-item">
+                <div class="result-rank ${rankClass}">${index + 1}</div>
+                <div class="result-info">
+                  <div class="result-name">${result.projectName}</div>
+                  <div class="result-votes">${result.count} vote${
               result.count !== 1 ? "s" : ""
             }</div>
-                <div class="result-bar">
-                  <div class="result-bar-fill" style="width: ${percentage}%"></div>
+                  <div class="result-bar">
+                    <div class="result-bar-fill" style="width: ${percentage}%"></div>
+                  </div>
                 </div>
               </div>
-            </div>
-          `;
+            `;
           })
           .join("");
       }
@@ -1262,9 +1242,9 @@
         const msgSpan = toast.querySelector(".toast-message");
 
         if (type === "success") {
-          icon.src = "./Game Making Software - Construct 3_files/tick.svg";
+          icon.src = "./assets/tick.svg";
         } else {
-          icon.src = "./Game Making Software - Construct 3_files/close.svg";
+          icon.src = "./assets/close.svg";
         }
 
         msgSpan.textContent = message;
