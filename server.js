@@ -596,6 +596,7 @@ app.delete("/api/vote", requireAuth, requireRole, (req, res) => {
     res.json({
       success: true,
       message: "Vote removed successfully",
+      remainingVotes: result.remainingVotes,
       results: getMonthlyResults(),
     });
   } else {

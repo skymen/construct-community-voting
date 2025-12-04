@@ -1002,6 +1002,21 @@
       .voter-item-name {
         font-weight: 500;
         color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .voter-vote-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.125rem 0.5rem;
+        background: var(--primary-pink);
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 50px;
       }
 
       .no-voters {
@@ -1484,6 +1499,10 @@
             throw new Error(result.errors[0].message);
           }
 
+          if (!result.data?.account) {
+            throw new Error("No account data received");
+          }
+
           renderProjects(result.data.account);
         } catch (error) {
           console.error("Error fetching projects:", error);
@@ -1600,10 +1619,16 @@
 
         const voters = monthlyResults[projectSlug]?.voters || [];
 
+        // Calculate total votes (sum of all voteCount values)
+        const totalVotes = voters.reduce((sum, voter) => {
+          if (typeof voter === "string") return sum + 1;
+          return sum + (voter.voteCount || 1);
+        }, 0);
+
         modalTitle.textContent = projectName;
-        modalSubtitle.textContent = `${voters.length} vote${
-          voters.length !== 1 ? "s" : ""
-        } this month`;
+        modalSubtitle.textContent = `${totalVotes} vote${
+          totalVotes !== 1 ? "s" : ""
+        } from ${voters.length} voter${voters.length !== 1 ? "s" : ""}`;
 
         if (voters.length === 0) {
           voterList.innerHTML =
@@ -1626,6 +1651,11 @@
                   voter.odId,
                   voter.odAvatar
                 );
+                const voteCount = voter.voteCount || 1;
+                const voteCountBadge =
+                  voteCount > 1
+                    ? `<span class="voter-vote-count">×${voteCount}</span>`
+                    : "";
                 return `
                 <div class="voter-item">
                   <div class="voter-item-avatar">
@@ -1641,7 +1671,7 @@
                   </div>
                   <div class="voter-item-name">${escapeHtml(
                     voter.username
-                  )}</div>
+                  )}${voteCountBadge}</div>
                 </div>
               `;
               }
@@ -1994,13 +2024,6 @@
           const data = await response.json();
 
           if (response.ok) {
-            // Update remaining votes
-            remainingVotes =
-              data.remainingVotes !== undefined
-                ? data.remainingVotes
-                : votesPerUser;
-            votesUsed = votesPerUser - remainingVotes;
-
             // Remove from currentVotes
             if (projectSlug) {
               currentVotes = currentVotes.filter(
@@ -2009,6 +2032,12 @@
             } else {
               currentVotes = [];
             }
+            // Recalculate votesUsed from remaining currentVotes
+            votesUsed = currentVotes.reduce(
+              (sum, v) => sum + (v.voteCount || 1),
+              0
+            );
+            remainingVotes = votesPerUser - votesUsed;
             hasVotedThisMonth = currentVotes.length > 0;
             monthlyResults = data.results;
             showToast("Vote removed successfully.", "success");
