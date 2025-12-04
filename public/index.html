@@ -695,6 +695,187 @@
         flex-wrap: wrap;
       }
 
+      /* Voter avatars stack */
+      .voters-preview {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+      }
+
+      .voters-avatars {
+        display: flex;
+        margin-right: 0.5rem;
+      }
+
+      .voter-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid var(--bg-white);
+        background: var(--text-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.625rem;
+        font-weight: 600;
+        color: white;
+        margin-left: -8px;
+        position: relative;
+      }
+
+      .voter-avatar:first-child {
+        margin-left: 0;
+      }
+
+      .voter-avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .voter-avatar.more {
+        background: var(--text-gray);
+        font-size: 0.5rem;
+      }
+
+      .voters-preview:hover .voter-avatar {
+        transform: translateY(-2px);
+        transition: transform 0.2s;
+      }
+
+      /* Voters modal */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .modal-overlay.show {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .modal {
+        background: var(--bg-white);
+        border-radius: 16px;
+        max-width: 400px;
+        width: 90%;
+        max-height: 80vh;
+        overflow: hidden;
+        transform: scale(0.9);
+        transition: transform 0.3s ease;
+      }
+
+      .modal-overlay.show .modal {
+        transform: scale(1);
+      }
+
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--border-light);
+      }
+
+      .modal-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: var(--text-dark);
+      }
+
+      .modal-subtitle {
+        font-size: 0.8125rem;
+        color: var(--text-light);
+        margin-top: 0.125rem;
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+      }
+
+      .modal-close:hover {
+        background: var(--bg-light);
+      }
+
+      .modal-close img {
+        width: 20px;
+        height: 20px;
+        opacity: 0.6;
+      }
+
+      .modal-body {
+        padding: 1rem 1.25rem;
+        max-height: 60vh;
+        overflow-y: auto;
+      }
+
+      .voter-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .voter-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem;
+        border-radius: 8px;
+        background: var(--bg-light);
+      }
+
+      .voter-item-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--text-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: white;
+        flex-shrink: 0;
+      }
+
+      .voter-item-avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .voter-item-name {
+        font-weight: 500;
+        color: var(--text-dark);
+      }
+
+      .no-voters {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-light);
+      }
+
       /* Toast notifications */
       .toast {
         position: fixed;
@@ -877,6 +1058,32 @@
     <div class="toast" id="toast">
       <img src="./assets/tick.svg" alt="" class="toast-icon" />
       <span class="toast-message"></span>
+    </div>
+
+    <!-- Voters Modal -->
+    <div
+      class="modal-overlay"
+      id="voters-modal"
+      onclick="closeVotersModal(event)"
+    >
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title" id="modal-project-name">
+              Project Voters
+            </div>
+            <div class="modal-subtitle" id="modal-vote-count">0 votes</div>
+          </div>
+          <button class="modal-close" onclick="closeVotersModal()">
+            <img src="./assets/close.svg" alt="Close" />
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="voter-list" id="voter-list">
+            <!-- Voters will be inserted here -->
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -1096,6 +1303,116 @@
           .toUpperCase();
       }
 
+      function getDiscordAvatarUrl(odId, odAvatar) {
+        if (odAvatar) {
+          return `https://cdn.discordapp.com/avatars/${odId}/${odAvatar}.png?size=64`;
+        }
+        return null;
+      }
+
+      function renderVoterAvatars(voters, maxShow = 3) {
+        if (!voters || voters.length === 0) return "";
+
+        const displayVoters = voters.slice(0, maxShow);
+        const remaining = voters.length - maxShow;
+
+        let html = '<div class="voters-avatars">';
+
+        displayVoters.forEach((voter) => {
+          // Handle both old format (string) and new format (object)
+          if (typeof voter === "string") {
+            html += `<div class="voter-avatar">${voter
+              .charAt(0)
+              .toUpperCase()}</div>`;
+          } else {
+            const avatarUrl = getDiscordAvatarUrl(voter.odId, voter.odAvatar);
+            if (avatarUrl) {
+              html += `<div class="voter-avatar"><img src="${avatarUrl}" alt="${voter.username}"></div>`;
+            } else {
+              html += `<div class="voter-avatar">${voter.username
+                .charAt(0)
+                .toUpperCase()}</div>`;
+            }
+          }
+        });
+
+        if (remaining > 0) {
+          html += `<div class="voter-avatar more">+${remaining}</div>`;
+        }
+
+        html += "</div>";
+        return html;
+      }
+
+      function showVoters(projectSlug, projectName) {
+        const modal = document.getElementById("voters-modal");
+        const voterList = document.getElementById("voter-list");
+        const modalTitle = document.getElementById("modal-project-name");
+        const modalSubtitle = document.getElementById("modal-vote-count");
+
+        const voters = monthlyResults[projectSlug]?.voters || [];
+
+        modalTitle.textContent = projectName;
+        modalSubtitle.textContent = `${voters.length} vote${
+          voters.length !== 1 ? "s" : ""
+        } this month`;
+
+        if (voters.length === 0) {
+          voterList.innerHTML =
+            '<div class="no-voters">No votes yet for this project</div>';
+        } else {
+          voterList.innerHTML = voters
+            .map((voter) => {
+              // Handle both old format (string) and new format (object)
+              if (typeof voter === "string") {
+                return `
+                <div class="voter-item">
+                  <div class="voter-item-avatar">${voter
+                    .charAt(0)
+                    .toUpperCase()}</div>
+                  <div class="voter-item-name">${voter}</div>
+                </div>
+              `;
+              } else {
+                const avatarUrl = getDiscordAvatarUrl(
+                  voter.odId,
+                  voter.odAvatar
+                );
+                return `
+                <div class="voter-item">
+                  <div class="voter-item-avatar">
+                    ${
+                      avatarUrl
+                        ? `<img src="${avatarUrl}" alt="${voter.username}">`
+                        : voter.username.charAt(0).toUpperCase()
+                    }
+                  </div>
+                  <div class="voter-item-name">${voter.username}</div>
+                </div>
+              `;
+              }
+            })
+            .join("");
+        }
+
+        modal.classList.add("show");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeVotersModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        const modal = document.getElementById("voters-modal");
+        modal.classList.remove("show");
+        document.body.style.overflow = "";
+      }
+
+      // Close modal with Escape key
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeVotersModal();
+        }
+      });
+
       function renderProjects(accountData) {
         const contentDiv = document.getElementById("content");
         const projects = accountData.childrenAccounts.nodes;
@@ -1225,8 +1542,13 @@
                     <img src="./assets/right-arrow.svg" alt="">
                     View on Open Collective
                   </a>
-                  <div class="vote-count">
-                    <img src="./assets/favorite.svg" alt="Votes">
+                  <div class="vote-count voters-preview" onclick="event.stopPropagation(); showVoters('${
+                    project.slug
+                  }', '${project.name.replace(/'/g, "\\'")}')">
+                    ${renderVoterAvatars(
+                      monthlyResults[project.slug]?.voters || []
+                    )}
+                    <img src="./assets/favorite.svg" alt="Votes" style="margin-right: 4px;">
                     <strong>${projectVotes}</strong> vote${
               projectVotes !== 1 ? "s" : ""
             }
@@ -1360,9 +1682,14 @@
                 <div class="result-rank ${rankClass}">${index + 1}</div>
                 <div class="result-info">
                   <div class="result-name">${result.projectName}</div>
-                  <div class="result-votes">${result.count} vote${
+                  <div class="result-votes voters-preview" onclick="event.stopPropagation(); showVoters('${
+                    result.slug
+                  }', '${result.projectName.replace(/'/g, "\\'")}')">
+                    ${renderVoterAvatars(result.voters, 2)}
+                    <span>${result.count} vote${
               result.count !== 1 ? "s" : ""
-            }</div>
+            }</span>
+                  </div>
                   <div class="result-bar">
                     <div class="result-bar-fill" style="width: ${percentage}%"></div>
                   </div>

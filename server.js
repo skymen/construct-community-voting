@@ -53,7 +53,7 @@ function hasVotedThisMonth(userId) {
   );
 }
 
-function recordVote(userId, username, projectSlug, projectName) {
+function recordVote(userId, username, avatar, projectSlug, projectName) {
   const votes = loadVotes();
   const currentMonth = getCurrentMonth();
 
@@ -69,6 +69,7 @@ function recordVote(userId, username, projectSlug, projectName) {
     id: Date.now().toString(),
     userId,
     username,
+    avatar,
     projectSlug,
     projectName,
     month: currentMonth,
@@ -87,7 +88,11 @@ function recordVote(userId, username, projectSlug, projectName) {
     };
   }
   votes.monthlyTotals[currentMonth][projectSlug].count++;
-  votes.monthlyTotals[currentMonth][projectSlug].voters.push(username);
+  votes.monthlyTotals[currentMonth][projectSlug].voters.push({
+    odId: userId,
+    username,
+    odAvatar: avatar,
+  });
 
   saveVotes(votes);
   return { success: true };
@@ -115,9 +120,12 @@ function removeVote(userId) {
   // Update monthly totals
   if (votes.monthlyTotals[currentMonth]?.[projectSlug]) {
     votes.monthlyTotals[currentMonth][projectSlug].count--;
+    // Find voter by odId (new format) or by matching username (old format)
     const voterIndex = votes.monthlyTotals[currentMonth][
       projectSlug
-    ].voters.indexOf(vote.username);
+    ].voters.findIndex((v) =>
+      typeof v === "object" ? v.odId === userId : v === vote.username
+    );
     if (voterIndex > -1) {
       votes.monthlyTotals[currentMonth][projectSlug].voters.splice(
         voterIndex,
@@ -325,6 +333,7 @@ app.post("/api/vote", requireAuth, requireRole, (req, res) => {
   const result = recordVote(
     req.session.user.id,
     req.session.user.username,
+    req.session.user.avatar,
     projectSlug,
     projectName
   );
