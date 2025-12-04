@@ -93,6 +93,55 @@ function recordVote(userId, username, projectSlug, projectName) {
   return { success: true };
 }
 
+function removeVote(userId) {
+  const votes = loadVotes();
+  const currentMonth = getCurrentMonth();
+
+  // Find the user's vote for this month
+  const voteIndex = votes.votes.findIndex(
+    (v) => v.userId === userId && v.month === currentMonth
+  );
+
+  if (voteIndex === -1) {
+    return { success: false, error: "No vote found for this month" };
+  }
+
+  const vote = votes.votes[voteIndex];
+  const projectSlug = vote.projectSlug;
+
+  // Remove from votes array
+  votes.votes.splice(voteIndex, 1);
+
+  // Update monthly totals
+  if (votes.monthlyTotals[currentMonth]?.[projectSlug]) {
+    votes.monthlyTotals[currentMonth][projectSlug].count--;
+    const voterIndex = votes.monthlyTotals[currentMonth][
+      projectSlug
+    ].voters.indexOf(vote.username);
+    if (voterIndex > -1) {
+      votes.monthlyTotals[currentMonth][projectSlug].voters.splice(
+        voterIndex,
+        1
+      );
+    }
+    // Remove project from totals if no more votes
+    if (votes.monthlyTotals[currentMonth][projectSlug].count <= 0) {
+      delete votes.monthlyTotals[currentMonth][projectSlug];
+    }
+  }
+
+  saveVotes(votes);
+  return { success: true };
+}
+
+function getUserVote(userId) {
+  const votes = loadVotes();
+  const currentMonth = getCurrentMonth();
+  return votes.votes.find(
+    (v) => v.userId === userId && v.month === currentMonth
+  );
+}
+
 function getMonthlyResults() {
   const votes = loadVotes();
   const currentMonth = getCurrentMonth();
@@ -146,10 +195,17 @@ app.get("/", (req, res) => {
 // Get current user
 app.get("/api/me", (req, res) => {
   if (req.session.user) {
+    const currentVote = getUserVote(req.session.user.id);
     res.json({
       authenticated: true,
       user: req.session.user,
-      hasVotedThisMonth: hasVotedThisMonth(req.session.user.id),
+      hasVotedThisMonth: !!currentVote,
+      currentVote: currentVote
+        ? {
+            projectSlug: currentVote.projectSlug,
+            projectName: currentVote.projectName,
+          }
+        : null,
     });
   } else {
     res.json({ authenticated: false });
@@ -275,6 +331,21 @@ app.post("/api/vote", requireAuth, requireRole, (req, res) => {
     res.json({
       success: true,
       message: "Vote recorded successfully",
+      results: getMonthlyResults(),
+    });
+  } else {
+    res.status(400).json({ error: result.error });
+  }
+});
+
+// Remove vote
+app.delete("/api/vote", requireAuth, requireRole, (req, res) => {
+  const result = removeVote(req.session.user.id);
+
+  if (result.success) {
+    res.json({
+      success: true,
+      message: "Vote removed successfully",
       results: getMonthlyResults(),
     });
   } else {
