@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Construct Community Projects</title>
+    <style>
+      :root {
+        --primary-orange: #ff6b35;
+        --primary-blue: #1e3a8a;
+        --bg-light: #f8fafc;
+        --bg-white: #ffffff;
+        --text-dark: #1e293b;
+        --text-gray: #64748b;
+        --border-light: #e2e8f0;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+          sans-serif;
+        background: var(--bg-light);
+        color: var(--text-dark);
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--border-light);
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-orange);
+        margin-bottom: 0.5rem;
+      }
+
+      .subtitle {
+        font-size: 1.125rem;
+        color: var(--text-gray);
+      }
+
+      .stats {
+        display: flex;
+        justify-content: center;
+        gap: 3rem;
+        margin-top: 2rem;
+      }
+
+      .stat {
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+        display: block;
+      }
+
+      .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-gray);
+        margin-top: 0.25rem;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 4rem 2rem;
+        font-size: 1rem;
+        color: var(--text-gray);
+      }
+
+      .error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        padding: 1.5rem;
+        border-radius: 8px;
+        text-align: center;
+        color: #dc2626;
+      }
+
+      .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .project-card {
+        background: var(--bg-white);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+      }
+
+      .project-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transform: translateY(-2px);
+      }
+
+      .project-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .project-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        background: linear-gradient(
+          135deg,
+          var(--primary-orange),
+          var(--primary-blue)
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1.125rem;
+        color: white;
+        flex-shrink: 0;
+      }
+
+      .project-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+      }
+
+      .project-name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.125rem;
+      }
+
+      .project-slug {
+        font-size: 0.875rem;
+        color: var(--text-gray);
+      }
+
+      .project-description {
+        color: var(--text-gray);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        font-size: 0.9375rem;
+      }
+
+      .project-meta {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+        padding: 1rem 0;
+        border-top: 1px solid var(--border-light);
+        border-bottom: 1px solid var(--border-light);
+      }
+
+      .meta-item {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .meta-label {
+        font-size: 0.75rem;
+        color: var(--text-gray);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .meta-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-top: 0.125rem;
+      }
+
+      .project-tags {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+      }
+
+      .tag {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        background: var(--bg-light);
+        border: 1px solid var(--border-light);
+        border-radius: 4px;
+        color: var(--text-gray);
+      }
+
+      .project-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        color: var(--primary-orange);
+        text-decoration: none;
+        font-size: 0.875rem;
+        transition: color 0.2s ease;
+      }
+
+      .project-link:hover {
+        color: var(--primary-blue);
+      }
+
+      .no-projects {
+        text-align: center;
+        padding: 4rem 2rem;
+        font-size: 1rem;
+        color: var(--text-gray);
+      }
+
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 2rem;
+        }
+
+        .stats {
+          gap: 1.5rem;
+          flex-wrap: wrap;
+        }
+
+        .projects-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .project-meta {
+          gap: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Construct Community</h1>
+        <p class="subtitle">Active Projects on Open Collective</p>
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-value" id="project-count">—</span>
+            <span class="stat-label">Active Projects</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="total-balance">—</span>
+            <span class="stat-label">Total Balance</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="contributor-count">—</span>
+            <span class="stat-label">Contributors</span>
+          </div>
+        </div>
+      </header>
+
+      <div id="content">
+        <div class="loading">Loading projects...</div>
+      </div>
+    </div>
+
+    <script>
+      const API_ENDPOINT = "https://api.opencollective.com/graphql/v2";
+      const COLLECTIVE_SLUG = "construct-community";
+
+      async function fetchProjects() {
+        const query = `
+                query($slug: String!) {
+                    account(slug: $slug) {
+                        name
+                        slug
+                        description
+                        imageUrl
+                        stats {
+                            balance {
+                                valueInCents
+                                currency
+                            }
+                        }
+                        childrenAccounts(accountType: PROJECT, isActive: true) {
+                            totalCount
+                            nodes {
+                                id
+                                name
+                                slug
+                                description
+                                imageUrl
+                                tags
+                                isActive
+                                isArchived
+                                createdAt
+                                stats {
+                                    balance {
+                                        valueInCents
+                                        currency
+                                    }
+                                    totalAmountReceived {
+                                        valueInCents
+                                        currency
+                                    }
+                                }
+                                members(role: BACKER) {
+                                    totalCount
+                                }
+                            }
+                        }
+                    }
+                }
+            `;
+
+        try {
+          const response = await fetch(API_ENDPOINT, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              query,
+              variables: { slug: COLLECTIVE_SLUG },
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.errors) {
+            throw new Error(result.errors[0].message);
+          }
+
+          return result.data.account;
+        } catch (error) {
+          console.error("Error fetching projects:", error);
+          throw error;
+        }
+      }
+
+      function formatCurrency(valueInCents, currency) {
+        const value = valueInCents / 100;
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: currency || "USD",
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }).format(value);
+      }
+
+      function getInitials(name) {
+        return name
+          .split(" ")
+          .map((word) => word[0])
+          .slice(0, 2)
+          .join("")
+          .toUpperCase();
+      }
+
+      function renderProjects(accountData) {
+        const contentDiv = document.getElementById("content");
+        const projects = accountData.childrenAccounts.nodes;
+
+        // Update stats
+        document.getElementById("project-count").textContent = projects.length;
+
+        const totalBalance = projects.reduce((sum, p) => {
+          return sum + (p.stats?.balance?.valueInCents || 0);
+        }, 0);
+        document.getElementById("total-balance").textContent = formatCurrency(
+          totalBalance,
+          "USD"
+        );
+
+        const totalContributors = projects.reduce((sum, p) => {
+          return sum + (p.members?.totalCount || 0);
+        }, 0);
+        document.getElementById("contributor-count").textContent =
+          totalContributors;
+
+        if (projects.length === 0) {
+          contentDiv.innerHTML =
+            '<div class="no-projects">No active projects found.</div>';
+          return;
+        }
+
+        const projectsHTML = projects
+          .map((project) => {
+            const balance = project.stats?.balance?.valueInCents || 0;
+            const currency = project.stats?.balance?.currency || "USD";
+            const totalReceived =
+              project.stats?.totalAmountReceived?.valueInCents || 0;
+            const backers = project.members?.totalCount || 0;
+            const tags = project.tags || [];
+
+            return `
+                    <div class="project-card">
+                        <div class="project-header">
+                            <div class="project-avatar">
+                                ${
+                                  project.imageUrl
+                                    ? `<img src="${project.imageUrl}" alt="${project.name}">`
+                                    : getInitials(project.name)
+                                }
+                            </div>
+                            <div class="project-info">
+                                <div class="project-name">${project.name}</div>
+                                <div class="project-slug">@${project.slug}</div>
+                            </div>
+                        </div>
+                        
+                        ${
+                          project.description
+                            ? `<div class="project-description">${project.description}</div>`
+                            : ""
+                        }
+                        
+                        <div class="project-meta">
+                            <div class="meta-item">
+                                <span class="meta-label">Balance</span>
+                                <span class="meta-value balance">${formatCurrency(
+                                  balance,
+                                  currency
+                                )}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Received</span>
+                                <span class="meta-value">${formatCurrency(
+                                  totalReceived,
+                                  currency
+                                )}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Backers</span>
+                                <span class="meta-value contributors">${backers}</span>
+                            </div>
+                        </div>
+
+                        ${
+                          tags.length > 0
+                            ? `
+                            <div class="project-tags">
+                                ${tags
+                                  .slice(0, 3)
+                                  .map(
+                                    (tag) => `<span class="tag">${tag}</span>`
+                                  )
+                                  .join("")}
+                            </div>
+                        `
+                            : ""
+                        }
+                        
+                        <a href="https://opencollective.com/${project.slug}" 
+                           target="_blank" 
+                           rel="noopener noreferrer" 
+                           class="project-link">
+                            View Project →
+                        </a>
+                    </div>
+                `;
+          })
+          .join("");
+
+        contentDiv.innerHTML = `<div class="projects-grid">${projectsHTML}</div>`;
+      }
+
+      function showError(error) {
+        const contentDiv = document.getElementById("content");
+        contentDiv.innerHTML = `
+                <div class="error">
+                    <h2>Error Loading Projects</h2>
+                    <p>${error.message}</p>
+                </div>
+            `;
+      }
+
+      // Initialize
+      fetchProjects().then(renderProjects).catch(showError);
+    </script>
+  </body>
+</html>
