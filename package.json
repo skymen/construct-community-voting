@@ -5,7 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "deploy": "./deploy.sh",
+    "setup-server": "ssh root@155.138.229.144 'bash -s' < server-setup.sh",
+    "setup-ssl": "ssh root@155.138.229.144 'bash -s' < setup-ssl.sh construct-community-voting.dedragames.com",
+    "logs": "ssh root@155.138.229.144 'pm2 logs oc-vote --lines 100'",
+    "status": "ssh root@155.138.229.144 'pm2 status'"
   },
   "keywords": [
     "discord",

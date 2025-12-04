@@ -587,6 +587,28 @@
 
       .result-item:hover {
         border-color: var(--primary-pink);
+        cursor: pointer;
+      }
+
+      /* Flash animation for highlighted cards */
+      @keyframes flash-highlight {
+        0% {
+          box-shadow: 0 0 0 0 rgba(220, 13, 138, 0.7);
+          border-color: var(--primary-pink);
+        }
+        50% {
+          box-shadow: 0 0 20px 8px rgba(220, 13, 138, 0.4);
+          border-color: var(--primary-pink);
+        }
+        100% {
+          box-shadow: var(--shadow-hover);
+          border-color: var(--primary-pink);
+        }
+      }
+
+      .project-card.highlight {
+        animation: flash-highlight 0.8s ease-out;
+        border-color: var(--primary-pink);
       }
 
       .result-rank {
@@ -1140,7 +1162,7 @@
             }
 
             return `
-              <div class="project-card">
+              <div class="project-card" id="project-${project.slug}">
                 <div class="project-header">
                   <div class="project-avatar">
                     ${
@@ -1332,7 +1354,9 @@
             else rankClass = "rank-other";
 
             return `
-              <div class="result-item">
+              <div class="result-item" onclick="scrollToProject('${
+                result.slug
+              }')">
                 <div class="result-rank ${rankClass}">${index + 1}</div>
                 <div class="result-info">
                   <div class="result-name">${result.projectName}</div>
@@ -1347,6 +1371,30 @@
             `;
           })
           .join("");
+      }
+
+      function scrollToProject(slug) {
+        const card = document.getElementById(`project-${slug}`);
+        if (card) {
+          // Scroll to the card with offset for fixed nav
+          const navHeight = 64;
+          const cardTop =
+            card.getBoundingClientRect().top + window.scrollY - navHeight - 20;
+
+          window.scrollTo({
+            top: cardTop,
+            behavior: "smooth",
+          });
+
+          // Add highlight class after scroll completes
+          setTimeout(() => {
+            card.classList.add("highlight");
+            // Remove highlight class after animation
+            setTimeout(() => {
+              card.classList.remove("highlight");
+            }, 800);
+          }, 300);
+        }
       }
 
       function showError(error) {
