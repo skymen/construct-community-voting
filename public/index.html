@@ -324,6 +324,25 @@
         box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
       }
 
+      /* Voting closed banner */
+      .voting-closed-banner {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        text-align: center;
+        font-weight: 500;
+        display: none;
+      }
+
+      .voting-closed-banner.show {
+        display: block;
+      }
+
+      .voting-closed-banner svg {
+        vertical-align: middle;
+        margin-right: 0.5rem;
+      }
+
       /* Main content area with sidebar */
       .main-layout {
         max-width: 1600px;
@@ -1029,6 +1048,26 @@
       </div>
     </nav>
 
+    <!-- Voting Closed Banner -->
+    <div class="voting-closed-banner" id="voting-closed-banner">
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      Voting is currently closed. Results from the last voting period are shown
+      below.
+    </div>
+
     <div class="hero-section">
       <div class="hero-content">
         <h1>Community Project Voting</h1>
@@ -1069,7 +1108,7 @@
           <div class="results-header">
             <img src="./assets/crown.svg" alt="Results" />
             <div>
-              <h2>Current Results</h2>
+              <h2 id="results-title">Current Results</h2>
               <div class="results-month" id="results-month"></div>
             </div>
           </div>
@@ -1118,25 +1157,44 @@
       let currentUser = null;
       let hasVotedThisMonth = false;
       let currentVote = null;
+      let votingEnabled = true;
+      let votingPeriod = null;
       let monthlyResults = {};
       let allProjects = [];
 
       // Initialize
       document.addEventListener("DOMContentLoaded", async () => {
-        updateVotingPeriod();
         await checkAuth();
         await Promise.all([fetchProjects(), fetchVoteResults()]);
       });
 
-      function updateVotingPeriod() {
-        const now = new Date();
-        const monthName = now.toLocaleString("default", {
-          month: "long",
-          year: "numeric",
-        });
-        const resultsMonth = document.getElementById("results-month");
-        if (resultsMonth) {
-          resultsMonth.textContent = monthName;
+      function updateVotingPeriodDisplay() {
+        // Parse voting period (format: "YYYY-MM") and display as month name
+        if (votingPeriod) {
+          const [year, month] = votingPeriod.split("-");
+          const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+          const monthName = date.toLocaleString("default", {
+            month: "long",
+            year: "numeric",
+          });
+          const resultsMonth = document.getElementById("results-month");
+          if (resultsMonth) {
+            resultsMonth.textContent = monthName;
+          }
+        }
+
+        // Update results title based on voting status
+        const resultsTitle = document.getElementById("results-title");
+        if (resultsTitle) {
+          resultsTitle.textContent = votingEnabled
+            ? "Current Results"
+            : "Last Results";
+        }
+
+        // Show/hide voting closed banner
+        const banner = document.getElementById("voting-closed-banner");
+        if (banner) {
+          banner.classList.toggle("show", !votingEnabled);
         }
       }
 
@@ -1144,6 +1202,10 @@
         try {
           const response = await fetch("/api/me");
           const data = await response.json();
+
+          votingEnabled = data.votingEnabled !== false;
+          votingPeriod = data.votingPeriod;
+          updateVotingPeriodDisplay();
 
           if (data.authenticated) {
             currentUser = data.user;
@@ -1513,7 +1575,8 @@
             const isVotedProject = currentVote?.projectSlug === project.slug;
 
             let voteSection = "";
-            if (currentUser && currentUser.hasRequiredRole) {
+            // Only show vote buttons if voting is enabled and user has required role
+            if (votingEnabled && currentUser && currentUser.hasRequiredRole) {
               if (hasVotedThisMonth && isVotedProject) {
                 voteSection = `
                   <div class="vote-actions">
@@ -1747,7 +1810,7 @@
         resultsSection.style.display = "block";
 
         // Update month display
-        updateVotingPeriod();
+        updateVotingPeriodDisplay();
 
         const maxVotes = sortedResults[0]?.count || 1;
 

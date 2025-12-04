@@ -47,11 +47,33 @@ function isVotingEnabled() {
   return votes.votingEnabled !== false;
 }
 
+function getVotingPeriod() {
+  const votes = loadVotes();
+  // If voting is disabled, use the frozen period; otherwise use current month
+  if (votes.votingEnabled === false && votes.votingPeriod) {
+    return votes.votingPeriod;
+  }
+  return getCurrentMonth();
+}
+
 function setVotingEnabled(enabled) {
   const votes = loadVotes();
   votes.votingEnabled = enabled;
+
+  if (enabled) {
+    // When re-enabling, update the voting period to current month
+    votes.votingPeriod = getCurrentMonth();
+  } else {
+    // When disabling, freeze the current voting period
+    votes.votingPeriod = getCurrentMonth();
+  }
+
   saveVotes(votes);
-  return { success: true, votingEnabled: enabled };
+  return {
+    success: true,
+    votingEnabled: enabled,
+    votingPeriod: votes.votingPeriod,
+  };
 }
 
 function saveVotes(data) {
@@ -170,8 +192,8 @@ function getUserVote(userId) {
 
 function getMonthlyResults() {
   const votes = loadVotes();
-  const currentMonth = getCurrentMonth();
-  return votes.monthlyTotals[currentMonth] || {};
+  const period = getVotingPeriod();
+  return votes.monthlyTotals[period] || {};
 }
 
 function getAllMonthlyResults() {
@@ -291,13 +313,17 @@ app.get("/", (req, res) => {
 
 // Get current user
 app.get("/api/me", (req, res) => {
+  const votingEnabledStatus = isVotingEnabled();
+  const votingPeriod = getVotingPeriod();
+
   if (req.session.user) {
     const currentVote = getUserVote(req.session.user.id);
     res.json({
       authenticated: true,
       user: req.session.user,
       hasVotedThisMonth: !!currentVote,
-      votingEnabled: isVotingEnabled(),
+      votingEnabled: votingEnabledStatus,
+      votingPeriod: votingPeriod,
       currentVote: currentVote
         ? {
             projectSlug: currentVote.projectSlug,
@@ -306,7 +332,11 @@ app.get("/api/me", (req, res) => {
         : null,
     });
   } else {
-    res.json({ authenticated: false, votingEnabled: isVotingEnabled() });
+    res.json({
+      authenticated: false,
+      votingEnabled: votingEnabledStatus,
+      votingPeriod: votingPeriod,
+    });
   }
 });
 
@@ -463,7 +493,8 @@ app.delete("/api/vote", requireAuth, requireRole, (req, res) => {
 // Get current month's voting results
 app.get("/api/votes/current", (req, res) => {
   res.json({
-    month: getCurrentMonth(),
+    month: getVotingPeriod(),
+    votingEnabled: isVotingEnabled(),
     results: getMonthlyResults(),
   });
 });
@@ -541,6 +572,7 @@ app.delete("/api/admin/votes", requireAuth, requireAdmin, (req, res) => {
 app.get("/api/admin/voting-status", requireAuth, requireAdmin, (req, res) => {
   res.json({
     votingEnabled: isVotingEnabled(),
+    votingPeriod: getVotingPeriod(),
   });
 });
 
@@ -556,6 +588,7 @@ app.post("/api/admin/voting-status", requireAuth, requireAdmin, (req, res) => {
   res.json({
     success: true,
     votingEnabled: result.votingEnabled,
+    votingPeriod: result.votingPeriod,
     message: enabled ? "Voting has been enabled" : "Voting has been disabled",
   });
 });

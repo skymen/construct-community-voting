@@ -622,7 +622,10 @@
               >Enabled</span
             >
           </h3>
-          <p>When disabled, members cannot submit new votes</p>
+          <p>
+            When disabled, members cannot submit new votes.
+            <span id="voting-period-info"></span>
+          </p>
         </div>
         <label class="toggle-switch">
           <input
@@ -708,19 +711,37 @@
         try {
           const response = await fetch("/api/admin/voting-status");
           const data = await response.json();
-          updateVotingStatusUI(data.votingEnabled);
+          updateVotingStatusUI(data.votingEnabled, data.votingPeriod);
         } catch (err) {
           console.error("Error loading voting status:", err);
         }
       }
 
-      function updateVotingStatusUI(enabled) {
+      function formatVotingPeriod(period) {
+        if (!period) return "";
+        const [year, month] = period.split("-");
+        const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+        return date.toLocaleString("default", {
+          month: "long",
+          year: "numeric",
+        });
+      }
+
+      function updateVotingStatusUI(enabled, votingPeriod) {
         const toggle = document.getElementById("voting-toggle");
         const badge = document.getElementById("voting-status-badge");
+        const periodInfo = document.getElementById("voting-period-info");
 
         toggle.checked = enabled;
         badge.textContent = enabled ? "Enabled" : "Disabled";
         badge.className = `voting-status ${enabled ? "enabled" : "disabled"}`;
+
+        if (periodInfo && votingPeriod) {
+          const periodText = formatVotingPeriod(votingPeriod);
+          periodInfo.textContent = enabled
+            ? `Current period: ${periodText}`
+            : `Last period: ${periodText}`;
+        }
       }
 
       async function toggleVoting(enabled) {
@@ -737,7 +758,7 @@
           const data = await response.json();
 
           if (response.ok) {
-            updateVotingStatusUI(data.votingEnabled);
+            updateVotingStatusUI(data.votingEnabled, data.votingPeriod);
             showToast(data.message, "success");
           } else {
             // Revert toggle on error
