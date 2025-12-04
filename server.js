@@ -15,6 +15,7 @@ const config = {
   botToken: process.env.DISCORD_BOT_TOKEN,
   guildId: process.env.DISCORD_GUILD_ID,
   requiredRoleId: process.env.DISCORD_REQUIRED_ROLE_ID,
+  adminRoleId: process.env.DISCORD_ADMIN_ROLE_ID || "157048794985267200",
   redirectUri:
     process.env.REDIRECT_URI ||
     `http://localhost:${PORT}/auth/discord/callback`,
@@ -161,6 +162,68 @@ function getAllMonthlyResults() {
   return votes.monthlyTotals;
 }
 
+// Admin functions
+function getAllVotes() {
+  const votes = loadVotes();
+  const currentMonth = getCurrentMonth();
+  return votes.votes.filter((v) => v.month === currentMonth);
+}
+
+function adminRemoveVote(voteId) {
+  const votes = loadVotes();
+  const currentMonth = getCurrentMonth();
+
+  const voteIndex = votes.votes.findIndex((v) => v.id === voteId);
+  if (voteIndex === -1) {
+    return { success: false, error: "Vote not found" };
+  }
+
+  const vote = votes.votes[voteIndex];
+  const projectSlug = vote.projectSlug;
+
+  // Remove from votes array
+  votes.votes.splice(voteIndex, 1);
+
+  // Update monthly totals if same month
+  if (
+    vote.month === currentMonth &&
+    votes.monthlyTotals[currentMonth]?.[projectSlug]
+  ) {
+    votes.monthlyTotals[currentMonth][projectSlug].count--;
+    const voterIndex = votes.monthlyTotals[currentMonth][
+      projectSlug
+    ].voters.findIndex((v) =>
+      typeof v === "object" ? v.odId === vote.userId : v === vote.username
+    );
+    if (voterIndex > -1) {
+      votes.monthlyTotals[currentMonth][projectSlug].voters.splice(
+        voterIndex,
+        1
+      );
+    }
+    if (votes.monthlyTotals[currentMonth][projectSlug].count <= 0) {
+      delete votes.monthlyTotals[currentMonth][projectSlug];
+    }
+  }
+
+  saveVotes(votes);
+  return { success: true };
+}
+
+function clearAllVotes() {
+  const currentMonth = getCurrentMonth();
+  const votes = loadVotes();
+
+  // Remove all votes for current month
+  votes.votes = votes.votes.filter((v) => v.month !== currentMonth);
+
+  // Clear monthly totals for current month
+  delete votes.monthlyTotals[currentMonth];
+
+  saveVotes(votes);
+  return { success: true };
+}
+
 // Middleware
 app.set("trust proxy", 1); // Trust nginx proxy for HTTPS detection
 app.use(express.json());
@@ -191,6 +254,13 @@ function requireRole(req, res, next) {
     return res
       .status(403)
       .json({ error: "You do not have the required role to vote" });
+  }
+  next();
+}
+
+function requireAdmin(req, res, next) {
+  if (!req.session.user?.isAdmin) {
+    return res.status(403).json({ error: "Admin access required" });
   }
   next();
 }
@@ -290,11 +360,13 @@ app.get("/auth/discord/callback", async (req, res) => {
 
     let hasRequiredRole = false;
     let isGuildMember = false;
+    let isAdmin = false;
 
     if (memberResponse.ok) {
       const member = await memberResponse.json();
       isGuildMember = true;
       hasRequiredRole = member.roles.includes(config.requiredRoleId);
+      isAdmin = member.roles.includes(config.adminRoleId);
     }
 
     // Store user in session
@@ -305,6 +377,7 @@ app.get("/auth/discord/callback", async (req, res) => {
       avatar: user.avatar,
       isGuildMember,
       hasRequiredRole,
+      isAdmin,
     };
 
     res.redirect("/");
@@ -385,6 +458,60 @@ app.get("/api/config", (req, res) => {
     guildId: config.guildId,
     requiredRoleId: config.requiredRoleId,
   });
+});
+
+// ============ Admin Endpoints ============
+
+// Serve admin page
+app.get("/admin", requireAuth, requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
+
+// Get all votes for current month (admin only)
+app.get("/api/admin/votes", requireAuth, requireAdmin, (req, res) => {
+  res.json({
+    month: getCurrentMonth(),
+    votes: getAllVotes(),
+    results: getMonthlyResults(),
+  });
+});
+
+// Remove a specific vote (admin only)
+app.delete(
+  "/api/admin/votes/:voteId",
+  requireAuth,
+  requireAdmin,
+  (req, res) => {
+    const { voteId } = req.params;
+    const result = adminRemoveVote(voteId);
+
+    if (result.success) {
+      res.json({
+        success: true,
+        message: "Vote removed successfully",
+        votes: getAllVotes(),
+        results: getMonthlyResults(),
+      });
+    } else {
+      res.status(400).json({ error: result.error });
+    }
+  }
+);
+
+// Clear all votes for current month (admin only)
+app.delete("/api/admin/votes", requireAuth, requireAdmin, (req, res) => {
+  const result = clearAllVotes();
+
+  if (result.success) {
+    res.json({
+      success: true,
+      message: "All votes cleared for current month",
+      votes: getAllVotes(),
+      results: getMonthlyResults(),
+    });
+  } else {
+    res.status(400).json({ error: result.error });
+  }
 });
 
 // Start server
