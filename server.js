@@ -30,16 +30,27 @@ function loadVotes() {
   try {
     if (fs.existsSync(VOTES_FILE)) {
       const data = JSON.parse(fs.readFileSync(VOTES_FILE, "utf8"));
-      // Ensure votingEnabled exists (default to true)
-      if (data.votingEnabled === undefined) {
-        data.votingEnabled = true;
-      }
+      // Ensure defaults exist
+      if (data.votingEnabled === undefined) data.votingEnabled = true;
+      if (data.votesPerUser === undefined) data.votesPerUser = 1;
+      if (data.disabledProjects === undefined) data.disabledProjects = [];
+      if (data.distributionAmount === undefined) data.distributionAmount = null;
+      if (data.distributionCurrency === undefined)
+        data.distributionCurrency = "USD";
       return data;
     }
   } catch (err) {
     console.error("Error loading votes:", err);
   }
-  return { votes: [], monthlyTotals: {}, votingEnabled: true };
+  return {
+    votes: [],
+    monthlyTotals: {},
+    votingEnabled: true,
+    votesPerUser: 1,
+    disabledProjects: [],
+    distributionAmount: null,
+    distributionCurrency: "USD",
+  };
 }
 
 function isVotingEnabled() {
@@ -93,15 +104,61 @@ function hasVotedThisMonth(userId) {
   );
 }
 
-function recordVote(userId, username, avatar, projectSlug, projectName) {
+function getVotesPerUser() {
+  const votes = loadVotes();
+  return votes.votesPerUser || 1;
+}
+
+function getUserVotesUsed(userId) {
+  const votes = loadVotes();
+  const currentMonth = getCurrentMonth();
+  return votes.votes
+    .filter((v) => v.userId === userId && v.month === currentMonth)
+    .reduce((sum, v) => sum + (v.voteCount || 1), 0);
+}
+
+function getUserRemainingVotes(userId) {
+  const votesPerUser = getVotesPerUser();
+  const votesUsed = getUserVotesUsed(userId);
+  return Math.max(0, votesPerUser - votesUsed);
+}
+
+function getDisabledProjects() {
+  const votes = loadVotes();
+  return votes.disabledProjects || [];
+}
+
+function isProjectDisabled(projectSlug) {
+  return getDisabledProjects().includes(projectSlug);
+}
+
+function recordVote(
+  userId,
+  username,
+  avatar,
+  projectSlug,
+  projectName,
+  voteCount = 1
+) {
   const votes = loadVotes();
   const currentMonth = getCurrentMonth();
 
-  // Check if already voted
-  if (
-    votes.votes.some((v) => v.userId === userId && v.month === currentMonth)
-  ) {
-    return { success: false, error: "Already voted this month" };
+  // Check if project is disabled
+  if (votes.disabledProjects?.includes(projectSlug)) {
+    return { success: false, error: "This project is not accepting votes" };
+  }
+
+  // Check remaining votes
+  const remainingVotes = getUserRemainingVotes(userId);
+  if (voteCount > remainingVotes) {
+    return {
+      success: false,
+      error: `You only have ${remainingVotes} vote(s) remaining`,
+    };
+  }
+
+  if (voteCount < 1) {
+    return { success: false, error: "Vote count must be at least 1" };
   }
 
   // Record the vote
@@ -112,6 +169,7 @@ function recordVote(userId, username, avatar, projectSlug, projectName) {
     avatar,
     projectSlug,
     projectName,
+    voteCount,
     month: currentMonth,
     timestamp: new Date().toISOString(),
   });
@@ -127,67 +185,105 @@ function recordVote(userId, username, avatar, projectSlug, projectName) {
       voters: [],
     };
   }
-  votes.monthlyTotals[currentMonth][projectSlug].count++;
-  votes.monthlyTotals[currentMonth][projectSlug].voters.push({
-    odId: userId,
-    username,
-    odAvatar: avatar,
-  });
+  votes.monthlyTotals[currentMonth][projectSlug].count += voteCount;
+
+  // Check if user already voted for this project (for voter list)
+  const existingVoter = votes.monthlyTotals[currentMonth][
+    projectSlug
+  ].voters.find((v) => (typeof v === "object" ? v.odId === userId : false));
+  if (existingVoter) {
+    existingVoter.voteCount = (existingVoter.voteCount || 1) + voteCount;
+  } else {
+    votes.monthlyTotals[currentMonth][projectSlug].voters.push({
+      odId: userId,
+      username,
+      odAvatar: avatar,
+      voteCount,
+    });
+  }
 
   saveVotes(votes);
-  return { success: true };
+  return { success: true, remainingVotes: getUserRemainingVotes(userId) };
 }
 
-function removeVote(userId) {
+function removeVote(userId, projectSlug = null) {
   const votes = loadVotes();
   const currentMonth = getCurrentMonth();
 
-  // Find the user's vote for this month
-  const voteIndex = votes.votes.findIndex(
-    (v) => v.userId === userId && v.month === currentMonth
-  );
-
-  if (voteIndex === -1) {
-    return { success: false, error: "No vote found for this month" };
-  }
-
-  const vote = votes.votes[voteIndex];
-  const projectSlug = vote.projectSlug;
-
-  // Remove from votes array
-  votes.votes.splice(voteIndex, 1);
-
-  // Update monthly totals
-  if (votes.monthlyTotals[currentMonth]?.[projectSlug]) {
-    votes.monthlyTotals[currentMonth][projectSlug].count--;
-    // Find voter by odId (new format) or by matching username (old format)
-    const voterIndex = votes.monthlyTotals[currentMonth][
-      projectSlug
-    ].voters.findIndex((v) =>
-      typeof v === "object" ? v.odId === userId : v === vote.username
+  // Find the user's vote(s) for this month
+  let votesToRemove;
+  if (projectSlug) {
+    // Remove votes only for specific project
+    votesToRemove = votes.votes.filter(
+      (v) =>
+        v.userId === userId &&
+        v.month === currentMonth &&
+        v.projectSlug === projectSlug
     );
-    if (voterIndex > -1) {
-      votes.monthlyTotals[currentMonth][projectSlug].voters.splice(
-        voterIndex,
-        1
-      );
+  } else {
+    // Remove all votes for this month
+    votesToRemove = votes.votes.filter(
+      (v) => v.userId === userId && v.month === currentMonth
+    );
+  }
+
+  if (votesToRemove.length === 0) {
+    return { success: false, error: "No vote found" };
+  }
+
+  // Remove votes from votes array
+  for (const vote of votesToRemove) {
+    const voteIndex = votes.votes.findIndex((v) => v.id === vote.id);
+    if (voteIndex > -1) {
+      votes.votes.splice(voteIndex, 1);
     }
-    // Remove project from totals if no more votes
-    if (votes.monthlyTotals[currentMonth][projectSlug].count <= 0) {
-      delete votes.monthlyTotals[currentMonth][projectSlug];
+
+    const slug = vote.projectSlug;
+    const voteCount = vote.voteCount || 1;
+
+    // Update monthly totals
+    if (votes.monthlyTotals[currentMonth]?.[slug]) {
+      votes.monthlyTotals[currentMonth][slug].count -= voteCount;
+
+      // Find voter and update or remove
+      const voterIndex = votes.monthlyTotals[currentMonth][
+        slug
+      ].voters.findIndex((v) =>
+        typeof v === "object" ? v.odId === userId : v === vote.username
+      );
+      if (voterIndex > -1) {
+        const voter =
+          votes.monthlyTotals[currentMonth][slug].voters[voterIndex];
+        if (typeof voter === "object" && voter.voteCount > voteCount) {
+          voter.voteCount -= voteCount;
+        } else {
+          votes.monthlyTotals[currentMonth][slug].voters.splice(voterIndex, 1);
+        }
+      }
+
+      // Remove project from totals if no more votes
+      if (votes.monthlyTotals[currentMonth][slug].count <= 0) {
+        delete votes.monthlyTotals[currentMonth][slug];
+      }
     }
   }
 
   saveVotes(votes);
-  return { success: true };
+  return { success: true, remainingVotes: getUserRemainingVotes(userId) };
 }
 
-function getUserVote(userId) {
+function getUserVotes(userId) {
   const votes = loadVotes();
   const currentMonth = getCurrentMonth();
-  return votes.votes.find(
+  return votes.votes.filter(
     (v) => v.userId === userId && v.month === currentMonth
   );
+}
+
+// For backward compatibility - returns first vote or null
+function getUserVote(userId) {
+  const userVotes = getUserVotes(userId);
+  return userVotes.length > 0 ? userVotes[0] : null;
 }
 
 function getMonthlyResults() {
@@ -313,29 +409,43 @@ app.get("/", (req, res) => {
 
 // Get current user
 app.get("/api/me", (req, res) => {
+  const votes = loadVotes();
   const votingEnabledStatus = isVotingEnabled();
-  const votingPeriod = getVotingPeriod();
+  const votingPeriodValue = getVotingPeriod();
+  const votesPerUserValue = getVotesPerUser();
+  const disabledProjectsList = getDisabledProjects();
+
+  const commonData = {
+    votingEnabled: votingEnabledStatus,
+    votingPeriod: votingPeriodValue,
+    votesPerUser: votesPerUserValue,
+    disabledProjects: disabledProjectsList,
+    distributionAmount: votes.distributionAmount,
+    distributionCurrency: votes.distributionCurrency,
+  };
 
   if (req.session.user) {
-    const currentVote = getUserVote(req.session.user.id);
+    const userVotes = getUserVotes(req.session.user.id);
+    const votesUsed = getUserVotesUsed(req.session.user.id);
+    const remainingVotes = getUserRemainingVotes(req.session.user.id);
+
     res.json({
       authenticated: true,
       user: req.session.user,
-      hasVotedThisMonth: !!currentVote,
-      votingEnabled: votingEnabledStatus,
-      votingPeriod: votingPeriod,
-      currentVote: currentVote
-        ? {
-            projectSlug: currentVote.projectSlug,
-            projectName: currentVote.projectName,
-          }
-        : null,
+      hasVotedThisMonth: userVotes.length > 0,
+      votesUsed,
+      remainingVotes,
+      currentVotes: userVotes.map((v) => ({
+        projectSlug: v.projectSlug,
+        projectName: v.projectName,
+        voteCount: v.voteCount || 1,
+      })),
+      ...commonData,
     });
   } else {
     res.json({
       authenticated: false,
-      votingEnabled: votingEnabledStatus,
-      votingPeriod: votingPeriod,
+      ...commonData,
     });
   }
 });
@@ -448,7 +558,7 @@ app.post("/api/vote", requireAuth, requireRole, (req, res) => {
     return res.status(403).json({ error: "Voting is currently disabled" });
   }
 
-  const { projectSlug, projectName } = req.body;
+  const { projectSlug, projectName, voteCount = 1 } = req.body;
 
   if (!projectSlug || !projectName) {
     return res
@@ -461,13 +571,15 @@ app.post("/api/vote", requireAuth, requireRole, (req, res) => {
     req.session.user.username,
     req.session.user.avatar,
     projectSlug,
-    projectName
+    projectName,
+    parseInt(voteCount, 10) || 1
   );
 
   if (result.success) {
     res.json({
       success: true,
       message: "Vote recorded successfully",
+      remainingVotes: result.remainingVotes,
       results: getMonthlyResults(),
     });
   } else {
@@ -477,7 +589,8 @@ app.post("/api/vote", requireAuth, requireRole, (req, res) => {
 
 // Remove vote
 app.delete("/api/vote", requireAuth, requireRole, (req, res) => {
-  const result = removeVote(req.session.user.id);
+  const { projectSlug } = req.body || {};
+  const result = removeVote(req.session.user.id, projectSlug);
 
   if (result.success) {
     res.json({
@@ -592,6 +705,105 @@ app.post("/api/admin/voting-status", requireAuth, requireAdmin, (req, res) => {
     message: enabled ? "Voting has been enabled" : "Voting has been disabled",
   });
 });
+
+// Get admin settings
+app.get("/api/admin/settings", requireAuth, requireAdmin, (req, res) => {
+  const votes = loadVotes();
+  res.json({
+    votesPerUser: votes.votesPerUser || 1,
+    distributionAmount: votes.distributionAmount,
+    distributionCurrency: votes.distributionCurrency || "USD",
+    disabledProjects: votes.disabledProjects || [],
+  });
+});
+
+// Update admin settings
+app.post("/api/admin/settings", requireAuth, requireAdmin, (req, res) => {
+  const { votesPerUser, distributionAmount, distributionCurrency } = req.body;
+  const votes = loadVotes();
+
+  if (votesPerUser !== undefined) {
+    const parsed = parseInt(votesPerUser, 10);
+    if (isNaN(parsed) || parsed < 1 || parsed > 10) {
+      return res
+        .status(400)
+        .json({ error: "Votes per user must be between 1 and 10" });
+    }
+    votes.votesPerUser = parsed;
+  }
+
+  if (distributionAmount !== undefined) {
+    if (distributionAmount === null || distributionAmount === "") {
+      votes.distributionAmount = null;
+    } else {
+      const parsed = parseFloat(distributionAmount);
+      if (isNaN(parsed) || parsed < 0) {
+        return res
+          .status(400)
+          .json({ error: "Distribution amount must be a positive number" });
+      }
+      votes.distributionAmount = parsed;
+    }
+  }
+
+  if (distributionCurrency !== undefined) {
+    votes.distributionCurrency = distributionCurrency;
+  }
+
+  saveVotes(votes);
+  res.json({
+    success: true,
+    votesPerUser: votes.votesPerUser,
+    distributionAmount: votes.distributionAmount,
+    distributionCurrency: votes.distributionCurrency,
+  });
+});
+
+// Disable a project from voting
+app.post(
+  "/api/admin/projects/:slug/disable",
+  requireAuth,
+  requireAdmin,
+  (req, res) => {
+    const { slug } = req.params;
+    const votes = loadVotes();
+
+    if (!votes.disabledProjects) {
+      votes.disabledProjects = [];
+    }
+
+    if (!votes.disabledProjects.includes(slug)) {
+      votes.disabledProjects.push(slug);
+      saveVotes(votes);
+    }
+
+    res.json({
+      success: true,
+      disabledProjects: votes.disabledProjects,
+    });
+  }
+);
+
+// Enable a project for voting
+app.post(
+  "/api/admin/projects/:slug/enable",
+  requireAuth,
+  requireAdmin,
+  (req, res) => {
+    const { slug } = req.params;
+    const votes = loadVotes();
+
+    if (votes.disabledProjects) {
+      votes.disabledProjects = votes.disabledProjects.filter((p) => p !== slug);
+      saveVotes(votes);
+    }
+
+    res.json({
+      success: true,
+      disabledProjects: votes.disabledProjects || [],
+    });
+  }
+);
 
 // Start server
 app.listen(PORT, () => {

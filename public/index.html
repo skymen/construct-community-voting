@@ -343,6 +343,96 @@
         margin-right: 0.5rem;
       }
 
+      /* Distribution announcement banner */
+      .distribution-banner {
+        background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        text-align: center;
+        font-weight: 500;
+        display: none;
+      }
+
+      .distribution-banner.show {
+        display: block;
+      }
+
+      .distribution-banner .amount {
+        font-size: 1.25rem;
+        font-weight: 700;
+      }
+
+      /* Vote allocation UI */
+      .vote-allocation {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .vote-allocation-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .vote-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid var(--border-light);
+        background: var(--bg-white);
+        color: var(--text-dark);
+        font-size: 1.25rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+      }
+
+      .vote-btn:hover:not(:disabled) {
+        background: var(--primary-pink);
+        border-color: var(--primary-pink);
+        color: white;
+      }
+
+      .vote-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .vote-count-input {
+        width: 50px;
+        text-align: center;
+        font-size: 1rem;
+        font-weight: 600;
+        border: 1px solid var(--border-light);
+        border-radius: 8px;
+        padding: 0.375rem;
+      }
+
+      .remaining-votes-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        background: rgba(220, 13, 138, 0.1);
+        border-radius: 50px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--primary-pink);
+      }
+
+      .project-disabled-badge {
+        background: rgba(244, 67, 54, 0.1);
+        color: #f44336;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+
       /* Main content area with sidebar */
       .main-layout {
         max-width: 1600px;
@@ -1068,6 +1158,12 @@
       below.
     </div>
 
+    <!-- Distribution Amount Banner -->
+    <div class="distribution-banner" id="distribution-banner">
+      <span class="amount" id="distribution-amount-display"></span> will be
+      distributed based on voting results
+    </div>
+
     <div class="hero-section">
       <div class="hero-content">
         <h1>Community Project Voting</h1>
@@ -1156,9 +1252,15 @@
 
       let currentUser = null;
       let hasVotedThisMonth = false;
-      let currentVote = null;
+      let currentVotes = [];
       let votingEnabled = true;
       let votingPeriod = null;
+      let votesPerUser = 1;
+      let votesUsed = 0;
+      let remainingVotes = 1;
+      let disabledProjects = [];
+      let distributionAmount = null;
+      let distributionCurrency = "USD";
       let monthlyResults = {};
       let allProjects = [];
 
@@ -1183,6 +1285,21 @@
           }
         }
 
+        // Update distribution banner
+        const distBanner = document.getElementById("distribution-banner");
+        const distDisplay = document.getElementById(
+          "distribution-amount-display"
+        );
+        if (distBanner && distributionAmount) {
+          distDisplay.textContent = formatCurrency(
+            distributionAmount * 100,
+            distributionCurrency
+          );
+          distBanner.classList.add("show");
+        } else if (distBanner) {
+          distBanner.classList.remove("show");
+        }
+
         // Update results title based on voting status
         const resultsTitle = document.getElementById("results-title");
         if (resultsTitle) {
@@ -1203,14 +1320,22 @@
           const response = await fetch("/api/me");
           const data = await response.json();
 
+          // Update global state from response
           votingEnabled = data.votingEnabled !== false;
           votingPeriod = data.votingPeriod;
+          votesPerUser = data.votesPerUser || 1;
+          disabledProjects = data.disabledProjects || [];
+          distributionAmount = data.distributionAmount;
+          distributionCurrency = data.distributionCurrency || "USD";
+
           updateVotingPeriodDisplay();
 
           if (data.authenticated) {
             currentUser = data.user;
             hasVotedThisMonth = data.hasVotedThisMonth;
-            currentVote = data.currentVote;
+            currentVotes = data.currentVotes || [];
+            votesUsed = data.votesUsed || 0;
+            remainingVotes = data.remainingVotes || votesPerUser;
             renderUserSection();
           } else {
             renderLoginButton();
@@ -1247,12 +1372,16 @@
         } else if (!currentUser.hasRequiredRole) {
           statusClass = "ineligible";
           statusText = "Missing role";
-        } else if (hasVotedThisMonth) {
+        } else if (remainingVotes <= 0) {
           statusClass = "voted";
-          statusText = "Voted ✓";
+          statusText =
+            votesPerUser > 1 ? `${votesUsed}/${votesPerUser} used` : "Voted ✓";
+        } else if (votesUsed > 0) {
+          statusClass = "voted";
+          statusText = `${remainingVotes}/${votesPerUser} left`;
         } else {
           statusClass = "";
-          statusText = "Can vote";
+          statusText = votesPerUser > 1 ? `${votesPerUser} votes` : "Can vote";
         }
 
         const adminButton = currentUser.isAdmin
@@ -1542,11 +1671,14 @@
         const contentDiv = document.getElementById("content");
         const projects = accountData.childrenAccounts.nodes;
 
-        // Store projects for results
+        // Store projects for results (including disabled for results display)
         allProjects = projects;
 
-        // Update stats
-        document.getElementById("project-count").textContent = projects.length;
+        // Update stats (only count active projects)
+        const activeCount = projects.filter(
+          (p) => !disabledProjects.includes(p.slug)
+        ).length;
+        document.getElementById("project-count").textContent = activeCount;
 
         // Use collective's own balance (not allocated to projects)
         const collectiveBalance = accountData.stats?.balance?.valueInCents || 0;
@@ -1563,7 +1695,12 @@
           return;
         }
 
-        const projectsHTML = projects
+        // Filter out disabled projects
+        const activeProjects = projects.filter(
+          (p) => !disabledProjects.includes(p.slug)
+        );
+
+        const projectsHTML = activeProjects
           .map((project) => {
             const balance = project.stats?.balance?.valueInCents || 0;
             const currency = project.stats?.balance?.currency || "USD";
@@ -1572,34 +1709,69 @@
             const backers = project.members?.totalCount || 0;
             const tags = project.tags || [];
             const projectVotes = monthlyResults[project.slug]?.count || 0;
-            const isVotedProject = currentVote?.projectSlug === project.slug;
+
+            // Find user's current votes for this project
+            const userProjectVotes = currentVotes.find(
+              (v) => v.projectSlug === project.slug
+            );
+            const userVoteCount = userProjectVotes?.voteCount || 0;
 
             let voteSection = "";
             // Only show vote buttons if voting is enabled and user has required role
             if (votingEnabled && currentUser && currentUser.hasRequiredRole) {
-              if (hasVotedThisMonth && isVotedProject) {
+              if (userVoteCount > 0) {
+                // User has voted for this project
                 voteSection = `
                   <div class="vote-actions">
                     <button class="btn btn-vote btn-voted" disabled>
                       <img src="./assets/tick.svg" alt="" style="width:16px;height:16px;filter:brightness(0) invert(1);">
-                      Your Vote
+                      ${userVoteCount} Vote${userVoteCount > 1 ? "s" : ""}
                     </button>
-                    <button class="btn btn-remove-vote" onclick="removeVote()">
-                      Remove Vote
+                    <button class="btn btn-remove-vote" data-remove-slug="${escapeAttr(
+                      project.slug
+                    )}">
+                      Remove
                     </button>
                   </div>`;
-              } else if (hasVotedThisMonth) {
+              } else if (remainingVotes > 0) {
+                // User can still vote
+                if (votesPerUser > 1) {
+                  // Multi-vote mode with allocation
+                  voteSection = `
+                    <div class="vote-allocation">
+                      <div class="vote-allocation-controls">
+                        <button class="vote-btn" data-adjust="-1" data-slug="${escapeAttr(
+                          project.slug
+                        )}" disabled>−</button>
+                        <input type="number" class="vote-count-input" id="vote-input-${escapeAttr(
+                          project.slug
+                        )}" value="1" min="1" max="${remainingVotes}" readonly>
+                        <button class="vote-btn" data-adjust="+1" data-slug="${escapeAttr(
+                          project.slug
+                        )}" ${remainingVotes <= 1 ? "disabled" : ""}>+</button>
+                      </div>
+                      <button class="btn btn-vote" data-vote-slug="${escapeAttr(
+                        project.slug
+                      )}" data-vote-name="${escapeAttr(project.name)}">
+                        <img src="./assets/favorite.svg" alt="" style="width:16px;height:16px;filter:brightness(0) invert(1);">
+                        Vote
+                      </button>
+                    </div>`;
+                } else {
+                  // Single vote mode
+                  voteSection = `
+                    <button class="btn btn-vote" data-vote-slug="${escapeAttr(
+                      project.slug
+                    )}" data-vote-name="${escapeAttr(project.name)}">
+                      <img src="./assets/favorite.svg" alt="" style="width:16px;height:16px;filter:brightness(0) invert(1);">
+                      Vote for this
+                    </button>`;
+                }
+              } else {
+                // No votes remaining
                 voteSection = `
                   <button class="btn btn-vote" disabled style="opacity: 0.5;">
-                    Already voted
-                  </button>`;
-              } else {
-                voteSection = `
-                  <button class="btn btn-vote" data-vote-slug="${escapeAttr(
-                    project.slug
-                  )}" data-vote-name="${escapeAttr(project.name)}">
-                    <img src="./assets/favorite.svg" alt="" style="width:16px;height:16px;filter:brightness(0) invert(1);">
-                    Vote for this
+                    No votes left
                   </button>`;
               }
             }
@@ -1704,7 +1876,27 @@
         // Attach event listeners for vote buttons
         contentDiv.querySelectorAll("[data-vote-slug]").forEach((btn) => {
           btn.addEventListener("click", () => {
-            vote(btn.dataset.voteSlug, btn.dataset.voteName);
+            const slug = btn.dataset.voteSlug;
+            const name = btn.dataset.voteName;
+            const input = document.getElementById(`vote-input-${slug}`);
+            const voteCount = input ? parseInt(input.value, 10) : 1;
+            vote(slug, name, voteCount);
+          });
+        });
+
+        // Attach event listeners for vote adjustment buttons
+        contentDiv.querySelectorAll("[data-adjust]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const slug = btn.dataset.slug;
+            const adjust = btn.dataset.adjust === "+1" ? 1 : -1;
+            adjustVoteCount(slug, adjust);
+          });
+        });
+
+        // Attach event listeners for remove vote buttons
+        contentDiv.querySelectorAll("[data-remove-slug]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            removeVote(btn.dataset.removeSlug);
           });
         });
 
@@ -1720,8 +1912,31 @@
         renderResults();
       }
 
-      async function vote(projectSlug, projectName) {
-        if (!currentUser || !currentUser.hasRequiredRole || hasVotedThisMonth) {
+      function adjustVoteCount(slug, adjust) {
+        const input = document.getElementById(`vote-input-${slug}`);
+        if (!input) return;
+
+        let value = parseInt(input.value, 10) + adjust;
+        value = Math.max(1, Math.min(value, remainingVotes));
+        input.value = value;
+
+        // Update button states
+        const minusBtn = document.querySelector(
+          `[data-adjust="-1"][data-slug="${slug}"]`
+        );
+        const plusBtn = document.querySelector(
+          `[data-adjust="+1"][data-slug="${slug}"]`
+        );
+        if (minusBtn) minusBtn.disabled = value <= 1;
+        if (plusBtn) plusBtn.disabled = value >= remainingVotes;
+      }
+
+      async function vote(projectSlug, projectName, voteCount = 1) {
+        if (
+          !currentUser ||
+          !currentUser.hasRequiredRole ||
+          remainingVotes <= 0
+        ) {
           return;
         }
 
@@ -1729,13 +1944,26 @@
           const response = await fetch("/api/vote", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ projectSlug, projectName }),
+            body: JSON.stringify({ projectSlug, projectName, voteCount }),
           });
 
           const data = await response.json();
 
           if (response.ok) {
-            hasVotedThisMonth = true;
+            // Update state
+            remainingVotes = data.remainingVotes;
+            votesUsed = votesPerUser - remainingVotes;
+            hasVotedThisMonth = votesUsed > 0;
+
+            // Add to currentVotes
+            const existing = currentVotes.find(
+              (v) => v.projectSlug === projectSlug
+            );
+            if (existing) {
+              existing.voteCount += voteCount;
+            } else {
+              currentVotes.push({ projectSlug, projectName, voteCount });
+            }
             currentVote = { projectSlug, projectName };
             monthlyResults = data.results;
             showToast(`Successfully voted for ${projectName}!`, "success");
@@ -1751,24 +1979,39 @@
         }
       }
 
-      async function removeVote() {
-        if (!currentUser || !hasVotedThisMonth) {
+      async function removeVote(projectSlug = null) {
+        if (!currentUser || currentVotes.length === 0) {
           return;
         }
 
         try {
           const response = await fetch("/api/vote", {
             method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ projectSlug }),
           });
 
           const data = await response.json();
 
           if (response.ok) {
-            const removedProject = currentVote?.projectName || "the project";
-            hasVotedThisMonth = false;
-            currentVote = null;
+            // Update remaining votes
+            remainingVotes =
+              data.remainingVotes !== undefined
+                ? data.remainingVotes
+                : votesPerUser;
+            votesUsed = votesPerUser - remainingVotes;
+
+            // Remove from currentVotes
+            if (projectSlug) {
+              currentVotes = currentVotes.filter(
+                (v) => v.projectSlug !== projectSlug
+              );
+            } else {
+              currentVotes = [];
+            }
+            hasVotedThisMonth = currentVotes.length > 0;
             monthlyResults = data.results;
-            showToast(`Vote for ${removedProject} removed.`, "success");
+            showToast("Vote removed successfully.", "success");
             renderUserSection();
             await fetchProjects();
             updateVoteCount();
