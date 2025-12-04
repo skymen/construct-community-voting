@@ -154,6 +154,7 @@ function getAllMonthlyResults() {
 }
 
 // Middleware
+app.set("trust proxy", 1); // Trust nginx proxy for HTTPS detection
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 app.use(
@@ -163,6 +164,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "lax" : "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
     },
   })
