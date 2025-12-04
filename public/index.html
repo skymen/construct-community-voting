@@ -1348,9 +1348,9 @@
           if (data.authenticated) {
             currentUser = data.user;
             hasVotedThisMonth = data.hasVotedThisMonth;
-            currentVotes = data.currentVotes || [];
-            votesUsed = data.votesUsed || 0;
-            remainingVotes = data.remainingVotes || votesPerUser;
+            currentVotes = data.currentVotes ?? [];
+            votesUsed = data.votesUsed ?? 0;
+            remainingVotes = data.remainingVotes ?? votesPerUser;
             renderUserSection();
           } else {
             renderLoginButton();
